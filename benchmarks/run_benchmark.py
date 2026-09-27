@@ -57,14 +57,65 @@ RESULTS_DIR = REPO_ROOT / "benchmarks" / "results"
 SUMMARY_PATH = REPO_ROOT / "benchmarks" / "latest_summary.json"
 
 #: The synth generator and receiptlingua's own language-id data use
-#: ISO 639-1 codes (ta, ar, hi, he), but the actual Tesseract tessdata_fast
-#: langpacks installed via `brew install tesseract-lang` are named with
-#: ISO 639-2/3 codes (tam, ara, hin, heb). The OCR engine itself does not
-#: do this remapping (a real, separate gap -- see
+#: ISO 639-1 codes (ta, ar, hi, he, ...), but the actual Tesseract
+#: tessdata_fast langpacks installed via `brew install tesseract-lang` are
+#: named with ISO 639-2/3 codes (tam, ara, hin, heb, ...). The OCR engine
+#: itself does not do this remapping (a real, separate gap -- see
 #: python/src/receiptlingua/langid/data/language_matrix.json), so the
 #: harness maps it here purely so it can drive the *real* installed
 #: langpacks for a real benchmark run, without editing engine internals.
-TESSERACT_LANG_MAP: dict[str, str] = {"ta": "tam", "ar": "ara", "hi": "hin", "he": "heb"}
+#:
+#: Verified present via `tesseract --list-langs` on this machine (163
+#: langpacks installed by `brew install tesseract-lang`, tessdata_fast
+#: bundle) for every one of the 25 synth-generator languages -- no
+#: langpack was missing, so no new `brew install` was needed for this run.
+TESSERACT_LANG_MAP: dict[str, str] = {
+    "ta": "tam",
+    "ar": "ara",
+    "hi": "hin",
+    "he": "heb",
+    "fr": "fra",
+    "de": "deu",
+    "es": "spa",
+    "pt": "por",
+    "it": "ita",
+    "nl": "nld",
+    "tr": "tur",
+    "pl": "pol",
+    "id": "ind",
+    "ms": "msa",
+    "vi": "vie",
+    "ru": "rus",
+    "uk": "ukr",
+    "fa": "fas",
+    "ur": "urd",
+    "mr": "mar",
+    "zh-Hans": "chi_sim",
+    "zh-Hant": "chi_tra",
+    "ja": "jpn",
+    "ko": "kor",
+}
+
+#: PaddleOCR's `lang=` parameter uses ISO 639-1 codes DIRECTLY for most
+#: languages (confirmed by reading
+#: .venv-paddle/lib/python3.13/site-packages/paddleocr/_utils/langs.py --
+#: e.g. "ar", "hi", "ru", "uk", "fa", "ur" are accepted as-is via its
+#: ARABIC_LANGS/DEVANAGARI_LANGS/CYRILLIC_LANGS/ESLAV_LANGS groupings), so
+#: no remapping is needed for those -- unlike Tesseract, which needs the
+#: ISO 639-2/3 TESSERACT_LANG_MAP above. The one real exception is CJK:
+#: PaddleOCR uses its own legacy PP-OCR names for those four, confirmed in
+#: .venv-paddle/lib/python3.13/site-packages/paddleocr/_pipelines/ocr.py
+#: (``_PPOCRV6_LANGS = {"ch", "chinese_cht", "en", "japan", "korean", ...}``).
+#: A first attempt at this benchmark run reused TESSERACT_LANG_MAP
+#: unconditionally for both backends and got 700/840 PaddleOCR cases
+#: failing outright with `ValueError: No models are available for
+#: lang='rus'` etc. -- this map is the real fix, not a guess.
+PADDLE_LANG_MAP: dict[str, str] = {
+    "zh-Hans": "ch",
+    "zh-Hant": "chinese_cht",
+    "ja": "japan",
+    "ko": "korean",
+}
 
 
 def _parse_list_arg(value: str, valid: list[str]) -> list[str]:
@@ -84,6 +135,7 @@ def run_case(
     seed: int,
     backend: str | None,
     raw_dir: Path,
+    ocr_cache: dict[str, ReceiptOCR],
 ) -> dict:
     receipt = generate_receipt(language, seed)
     degrade_fn = DEGRADATIONS[degradation]
@@ -95,8 +147,22 @@ def run_case(
     degraded_image.save(img_path)
     receipt.ground_truth.save(gt_path)
 
-    tess_lang = TESSERACT_LANG_MAP.get(language, language)
-    ocr = ReceiptOCR(backend=backend, languages=(tess_lang,) if language != "en" else ())
+    if backend == "paddleocr":
+        engine_lang = PADDLE_LANG_MAP.get(language, language)
+    else:
+        engine_lang = TESSERACT_LANG_MAP.get(language, language)
+    # Reuse one ReceiptOCR/engine instance per language across every case in
+    # this run (instead of constructing a fresh one per case) so a
+    # PaddleOCR backend's persistent sidecar daemon (see
+    # docs/adr/0002-ocr-backend-selection.md) actually gets to pay its
+    # ~1.7s model-load cost only ONCE per language and serve every
+    # subsequent case for that language warm (~0.5s) -- a fresh instance
+    # per case would defeat the whole point of the daemon.
+    if language not in ocr_cache:
+        ocr_cache[language] = ReceiptOCR(
+            backend=backend, languages=(engine_lang,) if language != "en" else ()
+        )
+    ocr = ocr_cache[language]
     start = time.perf_counter()
     error = None
     result = None
@@ -241,6 +307,7 @@ def main() -> None:
 
     records: list[dict] = []
     run_count = 0
+    ocr_cache: dict[str, ReceiptOCR] = {}
     start_all = time.perf_counter()
     for language in languages:
         for sample_idx in range(args.samples_per_language):
@@ -254,6 +321,7 @@ def main() -> None:
                     seed=seed,
                     backend=args.backend,
                     raw_dir=raw_dir,
+                    ocr_cache=ocr_cache,
                 )
                 records.append(record)
                 run_count += 1
@@ -267,6 +335,8 @@ def main() -> None:
         if run_count >= cases_to_run:
             break
     total_elapsed = time.perf_counter() - start_all
+    for ocr in ocr_cache.values():
+        ocr.close()
 
     raw_jsonl = Path(args.output_dir) / "latest_raw.jsonl"
     with raw_jsonl.open("w") as f:

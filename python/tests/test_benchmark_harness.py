@@ -27,7 +27,9 @@ if "en" not in SUPPORTED_LANGUAGES:
 
 
 def test_run_case_produces_expected_shape(tmp_path):
-    record = run_case(language="en", degradation="clean", seed=555, backend=None, raw_dir=tmp_path)
+    record = run_case(
+        language="en", degradation="clean", seed=555, backend=None, raw_dir=tmp_path, ocr_cache={}
+    )
     assert record["language"] == "en"
     assert record["degradation"] == "clean"
     assert 0.0 <= record["cer"]
@@ -42,7 +44,12 @@ def test_run_case_produces_expected_shape(tmp_path):
 
 def test_run_case_with_degradation(tmp_path):
     record = run_case(
-        language="en", degradation="gaussian_blur", seed=556, backend=None, raw_dir=tmp_path
+        language="en",
+        degradation="gaussian_blur",
+        seed=556,
+        backend=None,
+        raw_dir=tmp_path,
+        ocr_cache={},
     )
     assert record["error"] is None
     assert record["degradation"] == "gaussian_blur"
@@ -50,7 +57,14 @@ def test_run_case_with_degradation(tmp_path):
 
 def test_aggregate_summary_shape(tmp_path):
     records = [
-        run_case(language="en", degradation=deg, seed=600 + i, backend=None, raw_dir=tmp_path)
+        run_case(
+            language="en",
+            degradation=deg,
+            seed=600 + i,
+            backend=None,
+            raw_dir=tmp_path,
+            ocr_cache={},
+        )
         for i, deg in enumerate(["clean", "gaussian_blur", "gaussian_noise"])
     ]
     summary = aggregate(records)
@@ -66,7 +80,14 @@ def test_harness_smoke_five_cases(tmp_path):
     """A tiny (5-case) full run through run_case, distinct from any large
     real benchmark batch, to prove the harness end-to-end."""
     records = [
-        run_case(language="en", degradation=deg, seed=700 + i, backend=None, raw_dir=tmp_path)
+        run_case(
+            language="en",
+            degradation=deg,
+            seed=700 + i,
+            backend=None,
+            raw_dir=tmp_path,
+            ocr_cache={},
+        )
         for i, deg in enumerate(["clean", "rotation", "gaussian_blur", "jpeg_compression", "crop"])
     ]
     assert len(records) == 5
