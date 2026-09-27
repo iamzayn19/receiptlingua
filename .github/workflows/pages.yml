@@ -1,0 +1,41 @@
+name: Deploy website to GitHub Pages
+
+# Deploys the plain static site in website/ via the standard GitHub Pages
+# Actions flow (upload-pages-artifact + deploy-pages). This requires
+# GitHub Pages to be enabled for this repository with the "GitHub
+# Actions" source selected (Settings -> Pages) -- a one-time, owner-only
+# setup step that can't happen until the repo actually exists on GitHub.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload website/ as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
