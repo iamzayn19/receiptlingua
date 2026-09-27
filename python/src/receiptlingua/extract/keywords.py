@@ -46,15 +46,17 @@ RECEIPT_NUMBER_KEYWORDS: tuple[str, ...] = (
 )
 
 PAYMENT_METHOD_KEYWORDS: dict[str, tuple[str, ...]] = {
-    "cash": ("cash",),
-    "credit_card": ("credit card", "credit"),
-    "debit_card": ("debit card", "debit"),
-    "card": ("card",),
+    # More specific brand names checked before the generic "card"/"credit"/
+    # "debit" buckets, so e.g. "VISA" isn't swallowed by a generic match.
     "visa": ("visa",),
     "mastercard": ("mastercard", "master card"),
     "amex": ("amex", "american express"),
     "upi": ("upi",),
     "cheque": ("cheque", "check"),
+    "cash": ("cash",),
+    "credit_card": ("credit card", "credit"),
+    "debit_card": ("debit card", "debit"),
+    "card": ("card",),
 }
 
 
