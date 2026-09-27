@@ -1,0 +1,60 @@
+{
+  "schema_version": "0.1.0",
+  "engine": "paddleocr",
+  "engine_version": "pp-ocrv4-2024.06",
+  "mode": "auto",
+  "image": {
+    "width": 900,
+    "height": 1200,
+    "format": "jpeg",
+    "exif_orientation": 6
+  },
+  "processing_time_ms": 1512.9,
+  "languages": [{ "code": "en", "confidence": 0.61 }],
+  "scripts": ["Latn"],
+  "full_text": "QUICKMART\n[illegible]\n2026-0?-1?\nEggs 12ct         4.??\n[missing region]\nTOTAL             ??.??",
+  "text_lines": [
+    { "text": "QUICKMART", "bbox": { "x": 100, "y": 40, "width": 240, "height": 36 }, "confidence": 0.82, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "", "bbox": { "x": 90, "y": 90, "width": 300, "height": 30 }, "confidence": 0.08, "status": "illegible" },
+    { "text": "2026-0?-1?", "bbox": { "x": 90, "y": 130, "width": 200, "height": 28 }, "confidence": 0.31, "language": "en", "script": "Latn", "status": "uncertain" },
+    { "text": "Eggs 12ct         4.??", "bbox": { "x": 80, "y": 180, "width": 360, "height": 30 }, "confidence": 0.42, "language": "en", "script": "Latn", "status": "truncated" },
+    { "text": "", "bbox": { "x": 80, "y": 220, "width": 360, "height": 120 }, "confidence": 0.0, "status": "missing_region" },
+    { "text": "TOTAL             ??.??", "bbox": { "x": 80, "y": 360, "width": 360, "height": 32 }, "confidence": 0.22, "language": "en", "script": "Latn", "status": "illegible" }
+  ],
+  "warnings": [
+    "document is torn or occluded; a mid-section region could not be recognized",
+    "confidence below threshold for date and total fields",
+    "receipt total could not be verified against line items"
+  ],
+  "fields": {
+    "merchant": { "value": "QUICKMART", "status": "ok", "confidence": 0.82, "evidence": { "text_line_indices": [0] } },
+    "merchant_address": { "status": "missing" },
+    "date": { "status": "uncertain", "confidence": 0.31, "evidence": { "text_line_indices": [2] } },
+    "time": { "status": "missing" },
+    "currency": { "value": "USD", "status": "inferred_field", "confidence": 0.4, "evidence": { "text_line_indices": [3, 5] } },
+    "subtotal": { "status": "missing" },
+    "tax": { "status": "missing" },
+    "discounts": { "status": "missing" },
+    "total": { "status": "uncertain", "confidence": 0.22, "evidence": { "text_line_indices": [5] } },
+    "payment_method": { "status": "missing" },
+    "receipt_number": { "status": "missing" },
+    "line_items": [
+      {
+        "status": "uncertain",
+        "evidence": { "text_line_indices": [3] },
+        "description": { "value": "Eggs 12ct", "status": "ok", "confidence": 0.42, "evidence": { "text_line_indices": [3] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.4, "evidence": { "text_line_indices": [3] } },
+        "unit_price": { "status": "uncertain", "confidence": 0.2, "evidence": { "text_line_indices": [3] } },
+        "item_total": { "status": "uncertain", "confidence": 0.2, "evidence": { "text_line_indices": [3] } }
+      },
+      {
+        "status": "missing",
+        "evidence": { "text_line_indices": [4] },
+        "description": { "status": "missing" },
+        "quantity": { "status": "missing" },
+        "unit_price": { "status": "missing" },
+        "item_total": { "status": "missing" }
+      }
+    ]
+  }
+}
