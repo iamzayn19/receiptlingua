@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.uv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+javascript/dist/
+javascript/*.tsbuildinfo
+npm-debug.log*
+
+# Ruby
+ruby/.bundle/
+ruby/vendor/
+ruby/pkg/
+*.gem
+
+# Models, datasets, caches - never commit binaries
+models/weights/
+models/**/*.onnx
+models/**/*.pt
+models/**/*.pdiparams
+models/**/*.pdmodel
+datasets/raw/
+datasets/cache/
+benchmarks/results/*.jsonl
+*.zip
+*.tar.gz
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Secrets
+.env
+.env.*
+credentials.json
