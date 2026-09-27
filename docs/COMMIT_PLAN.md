@@ -577,3 +577,138 @@ Both the Ruby and JS clients are now blocked on the same future ADR
 (stdio vs. socket framing for a persistent daemon); neither should invent
 its own transport ahead of that decision, and whoever picks up the ADR
 should update both clients together rather than let them diverge.
+
+186-195 (website/docs/security/release automation) done as of 2026-09-27,
+in ~14 commits. `git remote -v` and `gh auth status` were re-checked at
+the start of this milestone: still no remote configured (repo not yet
+pushed anywhere), and `gh` is authenticated as `iamzayn19` with `repo`
+scope -- confirming both premises from the milestone brief still hold.
+
+**CI (`.github/workflows/`)**:
+
+- `python-tests.yml` -- pytest + `ruff check .`, matrix
+  `{ubuntu-latest, macos-latest} x {3.10, 3.11, 3.12}` (matches
+  `pyproject.toml`'s `requires-python = ">=3.10"`; Windows was
+  considered and deliberately left out as a stretch, not silently
+  dropped -- noted here rather than in the workflow file itself).
+  Installs only the lightweight dependency set already declared in
+  `pyproject.toml` (`numpy`/`pillow`/`opencv-python-headless`/
+  `pytesseract`/`regex`/`py3langid`/`arabic-reshaper`/`python-bidi` plus
+  the `dev` extra) -- never the `paddleocr` extra. Installs only the
+  `eng` Tesseract langpack (`apt-get install tesseract-ocr` /
+  `brew install tesseract`), matching what a fresh dev machine has by
+  default; PaddleOCR-sidecar tests
+  (`python/tests/test_paddleocr_engine.py`) and non-English Tesseract
+  langpack tests (`python/tests/test_langid_e2e_tesseract.py`) skip
+  themselves via their existing `pytest.mark.skipif` guards
+  (`RECEIPTLINGUA_PADDLE_PYTHON` unset / `tam`/`ara` not in
+  `engine.supported_languages()`), the same way they do locally --
+  verified by reading both files' skip conditions directly rather than
+  assuming.
+- `javascript-tests.yml` -- `npm ci`, `lint`, `format` (prettier
+  --check), `build`, `test` (vitest), matrix
+  `{ubuntu-latest, macos-latest} x node {18, 20, 22}` (18 is
+  `package.json`'s `engines.node` floor).
+- `ruby-tests.yml` -- `bundle exec rspec` + `bundle exec rubocop`,
+  matrix `{ubuntu-latest, macos-latest} x ruby {3.0, 3.1, 3.2}` (3.0 is
+  the gemspec's `required_ruby_version` floor).
+- Lint was folded into each language's own workflow (`ruff`/`eslint`+
+  `prettier`/`rubocop` alongside that language's tests) rather than a
+  separate `lint.yml`, since every one of these linters is already a
+  fast, single-command step with no cross-language shared config to
+  justify its own workflow file.
+- `security.yml` -- `pip-audit --strict`, `npm audit
+  --audit-level=high`, `bundler-audit check --update`, and
+  `gitleaks/gitleaks-action@v2` for secret scanning. Runs on push/PR
+  (all fast, no OCR/model downloads) plus a weekly Monday-06:00-UTC
+  schedule so newly-disclosed CVEs against unchanged pinned deps are
+  still caught. `gitleaks-action` was chosen over a paid-tier secret
+  scanner because it's free for public repos and needs no extra account
+  setup beyond the workflow's own `GITHUB_TOKEN`.
+- `benchmark.yml` -- the heavyweight synthetic-benchmark suite
+  (`benchmarks/run_benchmark.py`), `workflow_dispatch` (with
+  `languages`/`samples_per_language` inputs) or a weekly Monday-05:00-UTC
+  schedule only -- never on push/PR. Installs `tesseract-ocr-all` (the
+  full langpack bundle) since this workflow's whole point is exercising
+  more than just `eng`. This is the explicit fast-CI/heavyweight-CI split
+  the milestone brief called for.
+- `pages.yml` -- deploys `website/` to GitHub Pages via
+  `actions/upload-pages-artifact` + `actions/deploy-pages`, on push to
+  `main` (path-filtered to `website/**`) or manual dispatch. **Cannot
+  actually run yet**: GitHub Pages must be enabled with "GitHub Actions"
+  as the source in the repo's Settings, which requires the repo to
+  exist on GitHub first (owner action, out of scope here per the
+  brief).
+
+All six workflow files were validated with `actionlint` (installed via
+`brew install actionlint`), which reported zero problems against every
+file in `.github/workflows/` -- real static validation, not just visual
+review. They cannot literally execute until the repo is pushed to
+GitHub; that's the one thing this milestone genuinely cannot verify
+locally.
+
+**Dependabot** (`.github/dependabot.yml`): weekly updates for `pip`
+(`/python`), `npm` (`/javascript`), `bundler` (`/ruby`), and
+`github-actions` (`/`), each capped at 10 open PRs.
+
+**SBOM**: `python/scripts/generate_sbom.py`, a release-time (not per-PR)
+script. Verified for real: `pip install cyclonedx-bom` installs cleanly
+in this environment, and running the script actually produced a valid
+977-line CycloneDX 1.5 JSON document from this checkout's installed
+dependency set (a `pip freeze` piped through `cyclonedx-py requirements`,
+since the environment-scan (`cyclonedx-py env`) mode was also verified to
+work but the requirements-based invocation was chosen so the script does
+not require inspecting a specific venv path). If `cyclonedx-py` isn't
+importable, the script falls back to an honestly-labeled
+(`bomFormat: "CycloneDX-fallback"`) pip-freeze-derived JSON document
+rather than silently emitting something that looks like a real CycloneDX
+SBOM but isn't. Output (`python/sbom.json`) is gitignored, not committed,
+since it's a point-in-time snapshot to regenerate per release.
+
+**Website** (`website/`, plain HTML/CSS, zero build step -- a legitimate,
+honest choice for a v0 static site rather than pulling in a static-site
+generator for five pages): `index.html` (what it solves + install
+instructions for all three ecosystems, copied verbatim from README.md's
+own code blocks), `languages.html` (renders the language matrix
+client-side via `fetch()` against a static copy at
+`website/assets/language_matrix.json` -- chosen over pre-rendering at
+commit time for simplicity, at the honestly-documented cost that this
+copy must be manually kept in sync with
+`python/src/receiptlingua/langid/data/language_matrix.json` if that file
+changes), `benchmarks.html` (every number copied verbatim from
+`BENCHMARKS.md`, including the RTL before/after table and the explicit
+"what's excluded" section -- no number was restated rosier than its
+source), `docs.html` (links to README/ROADMAP/COMMIT_PLAN/ARCHITECTURE/
+LANGUAGES/BENCHMARKS/CONTRIBUTING/CODE_OF_CONDUCT/SECURITY/ADRs), and
+`support.html` (support channels, acknowledgements, and a donations
+section that is an explicit, documented TODO -- no GitHub
+Sponsors/Ko-fi/Open Collective/Patreon username was invented, matching
+`.github/FUNDING.yml`). No third-party analytics or trackers anywhere on
+the site. All 5 HTML files were verified to parse as well-formed HTML
+(Python's `html.parser`, configured to raise on any parse error) and
+every relative link/asset reference (`href`/`src` to another page or to
+`assets/*`) was checked against the actual file listing -- all resolve.
+`website/assets/language_matrix.json` was also verified to be valid JSON
+matching the shape `languages.html`'s script expects (94 entries, each
+with `code`/`name`/`script`/`model_supported`/`receipt_verified`/`rtl`/
+`mandatory`/`notes`).
+
+**`.github/FUNDING.yml`**: created with every platform line commented
+out and a comment explaining why, per the explicit instruction not to
+invent a funding identifier.
+
+**Not done in this milestone, and not pretended to be**: the repo was
+not pushed to GitHub, no GitHub repo was created, GitHub Pages was not
+actually enabled or verified live, and no CI workflow has actually
+executed on GitHub's runners (only `actionlint`'s static check ran).
+These all require the repo to exist on GitHub first.
+
+**Next steps**: (1) create the `iamzayn19/receiptlingua` repo on GitHub
+and push `main`; (2) watch the first real CI run across all workflows
+and fix anything that only surfaces on GitHub's actual runners (network
+access, apt/brew package availability, secrets like `GITHUB_TOKEN`
+scoping) that couldn't be caught by local `actionlint` validation alone;
+(3) enable GitHub Pages (Settings -> Pages -> Source: GitHub Actions) and
+confirm `pages.yml` deploys the site; (4) proceed to milestone 196-200
+(release hardening: versioning policy, changelog, first tagged
+pre-release across all three ecosystems).
