@@ -293,3 +293,107 @@ matched inside `"subtotal"`, causing a subtotal row to be misread as the
 grand total. Both are exactly the kind of failure hand-constructed
 input-based unit testing (as opposed to only real-image benchmarking)
 is well-suited to catch early.
+
+121-140 (Python packaging/CLI) done as of 2026-09-27, in 5 commits. This
+is the first milestone where every previous milestone's module is
+actually called end-to-end from one real entry point, and integration
+issues were genuinely found and fixed while doing it (not hypothetical):
+
+- `python/src/receiptlingua/api.py` (`ReceiptOCR.scan()`): calls
+  `pipeline.preprocess.orchestrator.preprocess_array`, then
+  `engines.registry.get_default_engine()`/`get_engine(name)`, then
+  `langid.tagging.tag_document`, then `extract.extractor.extract_fields`,
+  assembling output that validates against
+  `protocol/schema/response.schema.json` via `jsonschema` (checked for
+  real, not assumed). Accepts a file path, raw `bytes`, `PIL.Image`, or
+  `numpy.ndarray`. Errors raise `ReceiptOCRError`, reusing
+  `engines/errors.py`'s `EngineError.code` vocabulary rather than
+  inventing a second error taxonomy, and additionally cover
+  `INVALID_IMAGE`/`UNSUPPORTED_FORMAT` (from `pipeline.preprocess.loading`)
+  and `INVALID_CONFIGURATION` (bad `mode=`/unsupported input type), which
+  the engine layer alone had no reason to raise.
+- `python/src/receiptlingua/cli.py`: `argparse`-based (no new dependency
+  -- `click` was never actually a dependency anywhere in this tree, and
+  the command surface here does not need more than stdlib offers).
+  Implements `scan`, `languages`, `models`, `doctor`, `cache info`, and an
+  honest `benchmark` stub that says "not yet implemented, see milestone
+  171-185" instead of faking a result. `doctor` never prints the *value*
+  of `RECEIPTLINGUA_PADDLE_PYTHON`, only whether it is set and whether
+  that interpreter actually imports `paddle`/`paddleocr`.
+- `python/pyproject.toml`: added the `receiptlingua` console-script entry
+  point, `package-data` for `langid/data/language_matrix.json`, an SPDX
+  `license` expression, dev-status classifiers, and a `0.1.0.dev0`
+  pre-release version.
+
+**Real integration bugs found and fixed while wiring this up** (exactly
+the kind the task brief warned to expect from modules built in isolated
+sessions):
+
+1. `language_matrix.json` was not included in the built wheel/sdist --
+   `[tool.setuptools.packages.find]` finds Python packages but not data
+   files, so `receiptlingua languages` worked in this repo's editable
+   install (by `src/` sys.path accident) but broke with a bare
+   `FileNotFoundError` after a genuine `pip install` from a built wheel.
+   Verified by actually building a wheel (`python -m build`) and
+   installing it into a throwaway venv outside the repo -- caught this
+   exact failure that way, not by inspection. Fixed with
+   `[tool.setuptools.package-data]`.
+2. `readme = "../README.md"` in `[project]` (pointing at the repo-root
+   README, since `python/` has no README of its own) fails a real build:
+   setuptools refuses to read a file outside the project root
+   (`python/`). Also only caught by actually running `python -m build`
+   in a clean venv, not by reading the config. Removed rather than
+   duplicating the README into `python/` for now, since the top-level
+   README already documents the exact `from receiptlingua import
+   ReceiptOCR` usage this milestone implements.
+3. Tesseract's `recognize()` needs an explicit `languages=` tuple to ever
+   load a non-`eng` language pack -- `ReceiptOCR` did not thread this
+   through in its first draft, so passing `languages=("tam",)` silently
+   had no effect (always recognized as `eng`) until `_run_ocr` was fixed
+   to call `engine.recognize(pixels, languages=self.languages)`. This
+   pipeline still has **no automatic language-ID pre-pass** to pick
+   languages on its own (documented in `api.py`'s docstring) -- a caller
+   must currently name the language(s) explicitly for anything but
+   English to actually engage the right OCR language data. Flagged here
+   as a real, known gap, not silently left for someone to discover later.
+4. `langid.tagging.tag_document`'s document-level `languages` list sums
+   every line's full confidence-weighted ranking (not just each line's
+   top guess), which for short receipt text produces a very long,
+   mostly-near-zero-confidence tail (in one English fixture test, ~140
+   entries down to confidence 0.001). This is correct per that module's
+   own design intent (supporting genuinely mixed-language documents) and
+   was left as-is rather than changed, since it is existing, tested
+   behavior from milestone 81-100, not a defect introduced here -- but
+   the CLI's human-readable `scan` output was given a `>= 0.05`
+   confidence filter (capped at 5 entries) so it is actually usable
+   day-to-day; `--json` still returns the full, unfiltered list from the
+   API for anyone who wants it.
+
+**Verified for real, not just "it runs from the repo root"**: built a
+wheel with `python -m build`, installed it with `pip install
+<wheel>.whl` into a throwaway venv created outside this repo, then ran
+`receiptlingua doctor`, `receiptlingua languages`, `receiptlingua models`,
+`receiptlingua cache info`, `receiptlingua benchmark`, and
+`receiptlingua scan <fixture> --json` from that venv's `cwd=/tmp`, with
+the JSON output re-validated against `response.schema.json`. `import
+receiptlingua`, `receiptlingua.ReceiptOCR`, and the console script all
+work from a genuine fresh install, not by sys.path accident.
+
+Full Python test suite: 220 pre-existing tests still pass, plus 23 new
+integration tests added here (`test_api_integration.py`,
+`test_cli.py`) -- 243 passed, 9 skipped (Tamil/Arabic Tesseract language
+data and the 5 PaddleOCR sidecar tests, same honest skip conditions as
+milestone 56-80, unaffected by this milestone's changes). `ruff check .`
+passes clean on all new/changed files.
+
+**Known follow-up, not papered over**: no automatic language
+identification pre-pass exists yet to pick OCR languages on its own
+(item 3 above) -- multilingual `scan()` calls currently require the
+caller to pass `languages=(...)` explicitly. This is the natural next
+integration point once a language-ID-on-a-fast-pass design is worked
+out (a real chicken-and-egg problem: you need *some* OCR text to run
+language ID on before you know which language's OCR to run). Also
+unchanged from prior milestones and still open: the PaddleOCR sidecar
+remains a one-process-per-call stopgap (not the final transport), and
+only English/Tamil/Arabic have any real language-pack/benchmark
+verification at all.
