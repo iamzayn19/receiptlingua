@@ -850,3 +850,44 @@ This is `synth`-generator font support only -- it says nothing about
 `receipt_verified` in `language_matrix.json`/`LANGUAGES.md`, which still
 requires real benchmark evidence on actual receipts, not just a working
 font. See `LANGUAGES.md` for that distinction.
+
+## Benchmark status update (scaled 25-language x 14-degradation run)
+
+Following the language-expansion pass above, the benchmark was scaled up
+using the now-fixed persistent PaddleOCR sidecar daemon. Real numbers,
+not projected:
+
+- **7840 real cases executed** (7000 Tesseract across the full 25
+  languages x 14 degradations x 20 samples; 840 PaddleOCR across a
+  6-script representative subset -- `en, ar, hi, zh-Hans, ja, ru` -- x 14
+  degradations x 10 samples). Target was 10,000; this run intentionally
+  stopped short of it to prioritize language/backend breadth within the
+  time budget, per the task's own instructions -- see
+  `BENCHMARKS.md`'s "Gap to 10,000" section for the concrete, throughput-
+  based plan (measured ~145ms/case for Tesseract means the remaining
+  2160 cases is a ~5-minute run, not a resourcing problem).
+- All 25 generator languages had a working Tesseract langpack already
+  installed (`tesseract --list-langs`, 163 langpacks from the earlier
+  `brew install tesseract-lang`) -- no new install needed.
+- Two real bugs found and fixed in `benchmarks/run_benchmark.py` while
+  setting this run up: (1) it constructed a fresh `ReceiptOCR`/PaddleOCR
+  sidecar daemon per case instead of reusing one per language, defeating
+  the whole point of the persistent-daemon fix; (2) it reused
+  Tesseract's ISO 639-2/3 language codes for the PaddleOCR backend too,
+  which is wrong -- PaddleOCR uses ISO 639-1 codes directly except for
+  CJK, which needs its own `ch`/`chinese_cht`/`japan`/`korean` names.
+  Both fixed; see `BENCHMARKS.md`'s "Latest run" section for detail and
+  the before/after case counts (700/840 cases failed outright before
+  fix 2).
+- Headline: Tesseract mean CER 0.256 across all 25 languages; PaddleOCR
+  mean CER 0.149 on the 6-language subset, beating Tesseract on every
+  one of those six languages. Best Tesseract languages: `it`/`es`/`pl`
+  (~0.10 CER). Worst: `ur`/`fa` (~0.66 CER, Arabic-script Naskh-not-
+  Nastaliq rendering plus 0.0% merchant-match).
+- A new, previously undocumented gap surfaced by scaling up language
+  coverage: total-amount exact-match is **0.0%** for every non-Latin-
+  script Tesseract language except `zh-Hant`/`ja` (10 of 12 non-Latin
+  languages score exactly zero), while every Latin-script language
+  (regardless of currency) scores well above zero. This points at the
+  total-amount field-extraction regex, not a currency-formatting issue --
+  flagged as a concrete next bug, not fixed in this pass.

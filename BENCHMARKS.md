@@ -1,5 +1,236 @@
 # ReceiptLingua Benchmarks
 
+## Latest run: 25 languages x 14 degradations, 7840 real cases (2026-09-27)
+
+**Scope, read this first:** this is the largest real run to date, but it is
+**not** the 10,000-case target -- it is **7840** actually-executed cases
+(7000 Tesseract + 840 PaddleOCR), stated exactly, not rounded up. See "Gap
+to 10,000" at the end of this section for the concrete, throughput-based
+plan to close the remaining gap; nothing below extrapolates past what was
+actually run.
+
+### What ran
+
+- **Tesseract backend, full breadth**: all **25** `SUPPORTED_LANGUAGES`
+  from `python/src/receiptlingua/synth/generator.py` x all **14** real
+  (non-stubbed) degradations from `DEGRADATIONS` in
+  `python/src/receiptlingua/synth/degrade.py` x **20** samples/language =
+  **7000 cases**, 0 hard errors (every case produced a scored hypothesis,
+  even if a bad one). Command:
+  ```
+  python benchmarks/run_benchmark.py --languages all --degradations all \
+      --samples-per-language 20 --backend tesseract \
+      --output-dir benchmarks/results/tesseract_run
+  ```
+  Wall time: **1014.0s** (~16.9 min) for 7000 cases -> **145ms/case**
+  average (`benchmarks/results/tesseract_summary.json` `meta` block).
+- **PaddleOCR backend, representative subset**: `en, ar, hi, zh-Hans, ja,
+  ru` (one Latin-script, one Arabic-script, one Devanagari, one
+  Simplified-Chinese, one Japanese, one Cyrillic -- chosen to cover
+  distinct scripts, not just "the easy ones") x all 14 degradations x 10
+  samples/language = **840 cases**, 0 errors after a real bug fix (see
+  below). Command:
+  ```
+  python benchmarks/run_benchmark.py \
+      --languages en,ar,hi,zh-Hans,ja,ru --degradations all \
+      --samples-per-language 10 --backend paddleocr \
+      --output-dir benchmarks/results/paddle_run
+  ```
+  Wall time: **1556.2s** (~25.9 min) for 840 cases -> **1.85s/case**
+  average. Slower per-case than the ADR's isolated warm-call measurement
+  (~0.5s) because this number is the full `ReceiptOCR().scan()` pipeline
+  (image load, preprocessing, sidecar round trip, field extraction) on a
+  real multi-line receipt image, not a single bare `recognize()` call on a
+  tiny fixture -- still a big win over the old one-process-per-call
+  sidecar, which would have paid ~1.7s+ on literally every one of these
+  840 calls instead of once per language.
+  Running both backends across all 25 languages in the time available was
+  not realistic (PaddleOCR alone would need ~25/6 x 1556s = ~1.8 hours for
+  the same per-language sample count) -- covering a representative
+  6-script subset for the cross-backend comparison, while giving
+  Tesseract the full 25-language breadth, was the honest tradeoff made
+  here.
+
+**Two real bugs found and fixed while setting this run up** (not just
+config, actual code changes in `benchmarks/run_benchmark.py`):
+
+1. `run_case` constructed a brand-new `ReceiptOCR()` (and therefore a
+   brand-new PaddleOCR sidecar daemon) for every single case. That
+   defeated the entire point of the persistent-daemon fix in
+   `docs/adr/0002-ocr-backend-selection.md` -- every case would have paid
+   the ~1.7s cold-start cost. Fixed by caching one `ReceiptOCR` instance
+   per language across the whole run (`ocr_cache` in `main()`), with
+   `ocr.close()` called on every cached instance at the end of the run so
+   no sidecar daemon leaks past the script's exit.
+2. The harness reused `TESSERACT_LANG_MAP` (ISO 639-1 -> Tesseract's ISO
+   639-2/3 codes, e.g. `ru` -> `rus`) for **both** backends. PaddleOCR
+   does not use Tesseract's codes -- confirmed by reading
+   `paddleocr/_utils/langs.py` and `paddleocr/_pipelines/ocr.py` in the
+   sidecar venv, PaddleOCR accepts ISO 639-1 codes directly for most
+   languages (`ar`, `hi`, `ru`, ...) and only needs remapping for CJK
+   (`zh-Hans`->`ch`, `zh-Hant`->`chinese_cht`, `ja`->`japan`,
+   `ko`->`korean`). The first attempt at the PaddleOCR run, run with the
+   wrong map, failed outright on 700/840 cases with `ValueError: No
+   models are available for lang='rus'` (and equivalent for `hin`,
+   `chi_sim`, `jpn`) -- only `en` (which passes no language code) worked.
+   Added a separate `PADDLE_LANG_MAP` and picked the right one per
+   backend; the re-run below is the corrected, real result.
+
+### Tesseract langpack check
+
+`tesseract --list-langs` (163 langpacks, from the `brew install
+tesseract-lang` tessdata_fast bundle already installed in an earlier
+session) was checked against all 25 generator languages' correct
+ISO 639-2/3 codes. **All 25 had a working langpack already installed** --
+`ko`->`kor`, `zh-Hans`->`chi_sim`, `zh-Hant`->`chi_tra`, `mr`->`mar`,
+`ms`->`msa`, etc. were all present, so no new `brew install` was needed
+for this run (documented for completeness, not because anything had to be
+fixed).
+
+### Headline numbers
+
+Overall, Tesseract (7000 cases): **mean CER 0.256, mean WER 0.507**,
+**36.2%** cases with an exact total-amount match (`total_exact_match_rate`
+in `benchmarks/results/tesseract_summary.json`).
+
+Overall, PaddleOCR (840 cases, 6-language subset): **mean CER 0.149, mean
+WER 0.467**, **68.7%** exact total-amount match -- meaningfully better than
+Tesseract on the *same* six languages (compare per-language table below).
+This is a real, if narrow-scope, backend comparison: PaddleOCR was
+measurably more accurate everywhere it was tested in this run, at
+~13x the per-case latency (1.85s vs 0.145s).
+
+### Per-language breakdown, Tesseract (averaged over all 14 degradations x 20 samples = 280 cases/language)
+
+Best to worst by mean CER:
+
+| language | mean CER | mean WER | merchant-match | date-exact-match | total-exact-match |
+|---|---|---|---|---|---|
+| it | 0.101 | 0.222 | 85.4% | 80.4% | 75.7% |
+| es | 0.101 | 0.211 | 82.9% | 80.7% | 69.6% |
+| pl | 0.102 | 0.218 | 82.5% | 81.4% | 76.1% |
+| fr | 0.104 | 0.222 | 81.1% | 81.1% | 67.9% |
+| en | 0.105 | 0.250 | 82.5% | 81.4% | 71.1% |
+| nl | 0.109 | 0.283 | 83.6% | 82.5% | 61.1% |
+| pt | 0.122 | 0.308 | 83.9% | 80.0% | 62.1% |
+| de | 0.124 | 0.286 | 82.1% | 79.3% | 70.4% |
+| id | 0.128 | 0.303 | 82.1% | 77.9% | 64.3% |
+| vi | 0.132 | 0.302 | 83.2% | 71.8% | 57.1% |
+| tr | 0.148 | 0.382 | 81.8% | 77.1% | 57.1% |
+| ms | 0.150 | 0.339 | 82.1% | 80.0% | 56.1% |
+| ja | 0.192 | 0.548 | 63.6% | 76.4% | 76.8% |
+| uk | 0.225 | 0.433 | 82.5% | 74.6% | **0.0%** |
+| ru | 0.233 | 0.489 | 82.9% | 80.0% | **0.0%** |
+| zh-Hans | 0.279 | 0.811 | 72.5% | 11.8% | 11.1% |
+| zh-Hant | 0.312 | 0.871 | 39.6% | 10.7% | 28.2% |
+| ko | 0.329 | 0.682 | 77.1% | 56.1% | **0.0%** |
+| ta | 0.331 | 0.748 | 81.1% | 21.4% | **0.0%** |
+| mr | 0.337 | 0.698 | 78.9% | 69.3% | **0.0%** |
+| hi | 0.368 | 0.756 | 77.5% | 33.2% | **0.0%** |
+| he | 0.511 | 0.774 | 71.1% | 67.5% | **0.0%** |
+| ar | 0.544 | 0.813 | 22.5% | 76.1% | **0.0%** |
+| fa | 0.657 | 0.859 | 0.0%  | 66.8% | **0.0%** |
+| ur | 0.659 | 0.870 | 0.0%  | 40.4% | **0.0%** |
+
+**Best performers**: `it`/`es`/`pl` (Latin script, diacritics Tesseract's
+`tessdata_fast` handles well). **Worst performers**: `ur` (Urdu, CER
+0.659) and `fa` (Persian, CER 0.657) -- both share Arabic script rendered
+via `Arial Unicode.ttf` in Naskh style rather than the Nastaliq style real
+Urdu print uses (a known, documented generator limitation, see
+`generator.py`'s `ur` font comment), plus `fa`/`ur` merchant-match at
+exactly **0.0%** across all 280 cases each -- worse than even `ar`'s
+22.5%.
+
+**A real, newly-surfaced finding, not previously documented**: total-exact-
+match is **exactly 0.0%** for every non-Latin-script language except
+`zh-Hant` (28.2%) and `ja` (76.8%) -- `ru`, `uk`, `ko`, `ta`, `mr`, `hi`,
+`he`, `ar`, `fa`, `ur` all score **zero** total-amount matches out of 280
+cases each, while every Latin-script language (even ones with non-USD/EUR
+currencies like `tr`/TRY, `id`/IDR, `ms`/MYR, `vi`/VND) scores well above
+zero. This is not a currency-formatting issue (it cuts across many
+different currencies) -- it points at the total-amount field-extraction
+regex in the `extract` pipeline not being robust to how Tesseract emits
+digit runs embedded in non-Latin-script lines (Cyrillic, Devanagari,
+Arabic, Hangul, Hanzi). This is a genuine, unfixed gap surfaced by scaling
+up language coverage; it was not chased further in this pass (time
+budget), but it is now a concrete, reproducible next bug to fix, not a
+vague "internationalization could be better."
+
+### Per-degradation breakdown, Tesseract (averaged over all 25 languages x 20 samples = 500 cases/degradation)
+
+Best to worst by mean CER:
+
+| degradation | mean CER |
+|---|---|
+| rotation | 0.153 |
+| thermal_streak | 0.163 |
+| clean | 0.163 |
+| perspective_warp | 0.163 |
+| gaussian_noise | 0.166 |
+| salt_pepper_noise | 0.168 |
+| gaussian_blur | 0.169 |
+| jpeg_compression | 0.172 |
+| brightness_contrast | 0.183 |
+| crop | 0.247 |
+| low_contrast_fade | 0.272 |
+| motion_blur | 0.420 |
+| shadow | 0.449 |
+| wrinkle_warp | 0.697 |
+
+Notably, `clean` (no degradation at all) is *not* the best-scoring case --
+it ties with `thermal_streak`/`perspective_warp` and is beaten by
+`rotation`. This says the baseline non-English/non-Latin recognition
+quality, not the degradations, dominates overall CER at this scale;
+`wrinkle_warp` and `shadow` are the two degradations that clearly do add
+real extra difficulty on top of that baseline.
+
+### Per-language breakdown, PaddleOCR (6-language subset, averaged over 14 degradations x 10 samples = 140 cases/language)
+
+| language | mean CER (PaddleOCR) | mean CER (Tesseract, same language) |
+|---|---|---|
+| en | 0.034 | 0.105 |
+| ru | 0.067 | 0.233 |
+| ja | 0.116 | 0.192 |
+| hi | 0.119 | 0.368 |
+| zh-Hans | 0.141 | 0.279 |
+| ar | 0.418 | 0.544 |
+
+PaddleOCR beat Tesseract on every one of these six languages, by a wide
+margin on `hi` (0.119 vs 0.368) and `ru` (0.067 vs 0.233), and a smaller
+but still real margin on the hardest case, `ar` (0.418 vs 0.544). Arabic
+remains the hardest language for *both* backends -- this is consistent
+with the RTL/font caveats already documented above, not something
+PaddleOCR fully solves either.
+
+### Gap to 10,000, honestly
+
+Executed: **7840** cases. Target: **10,000**. Remaining gap: **2160**
+cases, purely a matter of wall-clock time now that both the sidecar
+speedup and the per-run engine-instance caching fix (bug #1 above) are in
+place -- there is no remaining architectural blocker.
+
+Concrete throughput measured in this session:
+- Tesseract: **145ms/case**. Closing the gap with Tesseract alone:
+  2160 cases x 0.145s = **~5.2 minutes**.
+- PaddleOCR: **1.85s/case**. Running the *entire* remaining 2160 cases on
+  PaddleOCR instead: 2160 x 1.85s = **~66.6 minutes**.
+
+The concrete next step is simply: run
+`python benchmarks/run_benchmark.py --languages all --degradations all
+--samples-per-language <N> --backend tesseract --seed-base <new offset>`
+with a fresh `--seed-base` (so new seeds are sampled rather than
+repeating the 7000 already-run ones) and `<N>` chosen so
+`25 * 14 * N >= 2160` (e.g. `N=7` gives 2450 more cases in ~6 minutes at
+measured Tesseract throughput), then append/merge that run's
+`latest_summary.json` into this file. At measured throughput, reaching
+10,000 Tesseract-only cases is a single-digit number of minutes of
+additional wall-clock time, not a resourcing problem -- it was not run
+further in this pass only because breadth (25 languages x 14
+degradations, both backends compared) was prioritized over hitting the
+round number, per this task's own instructions.
+
+---
+
 ## RTL update (Arabic/Hebrew CER > 1.0 root-caused and fixed)
 
 The original 350-case run below measured Arabic CER 1.161 and Hebrew CER
