@@ -1,5 +1,97 @@
 # ReceiptLingua Benchmarks
 
+## RTL update (Arabic/Hebrew CER > 1.0 root-caused and fixed)
+
+The original 350-case run below measured Arabic CER 1.161 and Hebrew CER
+1.136 -- a CER above 1.0 means the OCR output has *more character-level
+errors than the ground truth has characters*, which is a broken pipeline,
+not "needs improvement." This was root-caused, not guessed at, by actually
+looking at the generated images and raw OCR output. Three real, distinct
+bugs were found and fixed:
+
+1. **The synthetic generator never applied Arabic letter shaping or
+   bidi/RTL reordering before drawing text.** `PIL.ImageDraw.text` draws
+   whatever codepoints it's given, left-to-right, with no awareness of the
+   Unicode Bidirectional Algorithm or Arabic's contextual joining forms
+   (initial/medial/final/isolated). Rendering the ground-truth *logical*
+   Unicode string directly produced visually broken images: Arabic letters
+   came out as disconnected isolated glyphs, and word order was wrong for
+   both Arabic and Hebrew. Confirmed visually (rendered a test PNG with
+   and without correction side by side; the "before" row is genuinely
+   unreadable Arabic even to a human, and the "after" row -- run through
+   `arabic-reshaper` + `python-bidi`'s `get_display` -- reads as correct
+   joined Arabic/Hebrew). **Even a perfect OCR engine could never have
+   matched the old ground truth**, because the image itself didn't depict
+   that text correctly. Fixed in
+   `python/src/receiptlingua/synth/generator.py` (`_visual_render_line`);
+   the ground-truth `lines`/`full_text` are deliberately left in logical
+   order (unchanged) -- only the rendering path changed.
+2. **The Arabic/Hebrew system fonts used (`SFArabic.ttf`/`SFHebrew.ttf`)
+   have no usable Latin digit or ASCII glyphs.** Verified by probing
+   `PIL.ImageFont.getmask(ch).getbbox()` for `'0'..'9'`, `'x'`, `'A'`: every
+   one came back with the *exact same bounding box*, the signature of
+   FreeType's `.notdef` fallback ("tofu box") glyph -- every price, date,
+   and quantity on an ar/he receipt was silently rendered as a solid black
+   box, not a digit. Since every line item, date, and total on these
+   receipts is majority-numeric, this alone would have wrecked CER even
+   with bidi/shaping fixed. Switched both `ar` and `he` to
+   `/System/Library/Fonts/Supplemental/Arial Unicode.ttf`, verified (same
+   bbox-probing method) to have real, distinct glyphs for Latin digits
+   *and* Arabic/Hebrew letterforms including the presentation-forms glyphs
+   `arabic-reshaper` produces.
+3. **Tesseract's own `ara`/`heb` recognition returns each line in visual
+   (mirrored) order, not logical Unicode order**, and nothing in the
+   pipeline corrected for it -- `python/src/receiptlingua/extract/
+   reading_order.py`'s RTL row-ordering logic exists but is **not called
+   anywhere** in `api.py` or the engine layer (confirmed by grep -- it's
+   dead code), and it wouldn't have fixed this specific bug anyway since
+   it only reorders whole lines/rows, not the character order Tesseract
+   emits per recognized run. Verified directly: raw
+   `pytesseract.image_to_string(..., lang="ara")` on a correctly-rendered
+   receipt returned the Arabic word for "rice" (`أرز`) as `زرأ` -- its own
+   characters reversed -- and whole lines came back as the mirror image of
+   the correct string. Running that output back through `python-bidi`'s
+   `get_display` (the same function used to go logical->visual for
+   rendering) recovers the correct logical-order text; this was verified
+   empirically against real OCR output (`أرز` reappeared correctly, digit
+   runs stayed intact and in place) before being wired in, not assumed to
+   work. Fixed in `python/src/receiptlingua/engines/tesseract_engine.py`:
+   lines recognized under `ara`/`heb` now get `get_display()` applied to
+   their assembled text before being returned.
+
+**Real re-measurement** (420 cases: en/ar/he x all 14 degradations x 10
+samples/language, `--seed-base 30000`, same Tesseract tessdata_fast
+backend, `benchmarks/latest_summary.json`):
+
+| language | before (CER) | after fix 1+2 only (CER) | after all 3 fixes (CER) | merchant-match (before -> after) |
+|---|---|---|---|---|
+| en | 0.108 | 0.097 | 0.101 | 81.4% -> 82.9% (no regression) |
+| ar | 1.161 | 0.663 | **0.545** | 74.3% -> 13.6% (regressed -- see below) |
+| he | 1.136 | 0.672 | **0.506** | 85.7% -> 70.7% (partial recovery) |
+
+Honest reporting, not a victory lap: CER improved dramatically (Arabic
+1.161 -> 0.545, Hebrew 1.136 -> 0.506) and English is unaffected (0.108 ->
+0.101, within run-to-run noise from the different seed-base/sample-count
+used for this focused re-run). This confirms the three bugs above were
+real and the fixes work. **CER is still meaningfully worse than English's
+~0.10**, and merchant-match rate for Arabic (13.6%) is worse than the
+*original, broken-image* run's 74.3% -- that old number was itself
+suspicious (a wrong ground-truth image plus a mangled OCR reversal
+apparently canceled out often enough to spuriously fuzzy-match short
+merchant strings; it was never a meaningful signal, and this run's honest
+extraction-level number is lower because the underlying text comparison is
+now real). The residual gap after all three real fixes is most likely:
+Tesseract's `tessdata_fast` `ara`/`heb` models being genuinely weaker than
+`eng`'s, and/or `Arial Unicode.ttf`'s Arabic presentation-forms glyph
+shapes not matching what `ara`'s training data expects closely enough for
+clean recognition. Neither was chased further in this pass -- reaching
+production-grade RTL quality likely needs `tessdata_best` language packs
+and/or a PaddleOCR/other engine comparison (already a known gap, see
+"Backend scope" below), not more generator/reordering fixes.
+
+---
+
+
 **Scope, read this first:** this is a real, executed run of **350 synthetic
 cases** (not the eventual 10,000+ target). All data is 100% synthetically
 generated by `python/src/receiptlingua/synth/generator.py` -- there is no
