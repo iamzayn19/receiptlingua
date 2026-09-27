@@ -79,4 +79,10 @@ owner-only actions (npm login, gem signin, GitHub repo creation confirm).
 
 ---
 
-Status: commits 1-15 in progress as of 2026-09-27.
+Status: commits 1-15 done; 16-30 (protocol/schema) done as of 2026-09-27.
+Actual commit count for 16-30 was ~11 rather than 15, since the schema work
+naturally grouped into fewer, larger atomic steps (envelope, languages,
+text lines, structured fields, error schema, versioning, script, and one
+commit per fixture). Transport mechanism (stdio vs. Unix socket) remains
+an open question for a future ADR before milestone 31+ needs it directly,
+and is not blocking — the sidecar isn't implemented yet.
