@@ -31,7 +31,7 @@ models/**/*.pdiparams
 models/**/*.pdmodel
 datasets/raw/
 datasets/cache/
-benchmarks/results/*.jsonl
+benchmarks/results/
 *.zip
 *.tar.gz
 
