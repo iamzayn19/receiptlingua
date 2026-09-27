@@ -1,0 +1,60 @@
+{
+  "schema_version": "0.1.0",
+  "engine": "paddleocr",
+  "engine_version": "pp-ocrv4-2024.06",
+  "mode": "accurate",
+  "image": {
+    "width": 1200,
+    "height": 1600,
+    "format": "jpeg",
+    "exif_orientation": 1
+  },
+  "processing_time_ms": 812.4,
+  "languages": [{ "code": "en", "confidence": 0.99 }],
+  "scripts": ["Latn"],
+  "full_text": "GREENLEAF MARKET\n123 Main St, Springfield\n2026-03-14 09:41\nMilk 2% 1L        3.49\nWhole Wheat Bread 2.99\nSUBTOTAL          6.48\nTAX                0.52\nTOTAL              7.00\nVISA ****4242\nRECEIPT #48213",
+  "text_lines": [
+    { "text": "GREENLEAF MARKET", "bbox": { "x": 120, "y": 60, "width": 340, "height": 40 }, "confidence": 0.98, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "123 Main St, Springfield", "bbox": { "x": 100, "y": 110, "width": 400, "height": 32 }, "confidence": 0.97, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "2026-03-14 09:41", "bbox": { "x": 100, "y": 150, "width": 220, "height": 30 }, "confidence": 0.96, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "Milk 2% 1L        3.49", "bbox": { "x": 90, "y": 210, "width": 420, "height": 30 }, "confidence": 0.95, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "Whole Wheat Bread 2.99", "bbox": { "x": 90, "y": 250, "width": 420, "height": 30 }, "confidence": 0.94, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "SUBTOTAL          6.48", "bbox": { "x": 90, "y": 300, "width": 420, "height": 30 }, "confidence": 0.97, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "TAX                0.52", "bbox": { "x": 90, "y": 340, "width": 420, "height": 30 }, "confidence": 0.96, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "TOTAL              7.00", "bbox": { "x": 90, "y": 380, "width": 420, "height": 30 }, "confidence": 0.98, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "VISA ****4242", "bbox": { "x": 90, "y": 430, "width": 260, "height": 28 }, "confidence": 0.93, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "RECEIPT #48213", "bbox": { "x": 90, "y": 470, "width": 260, "height": 28 }, "confidence": 0.95, "language": "en", "script": "Latn", "status": "ok" }
+  ],
+  "warnings": [],
+  "fields": {
+    "merchant": { "value": "GREENLEAF MARKET", "status": "ok", "confidence": 0.98, "evidence": { "text_line_indices": [0] } },
+    "merchant_address": { "value": "123 Main St, Springfield", "status": "ok", "confidence": 0.97, "evidence": { "text_line_indices": [1] } },
+    "date": { "value": "2026-03-14", "status": "ok", "confidence": 0.96, "evidence": { "text_line_indices": [2] } },
+    "time": { "value": "09:41", "status": "ok", "confidence": 0.96, "evidence": { "text_line_indices": [2] } },
+    "currency": { "value": "USD", "status": "inferred_field", "confidence": 0.7, "evidence": { "text_line_indices": [5, 6, 7] } },
+    "subtotal": { "value": 6.48, "status": "ok", "confidence": 0.97, "evidence": { "text_line_indices": [5] } },
+    "tax": { "value": 0.52, "status": "ok", "confidence": 0.96, "evidence": { "text_line_indices": [6] } },
+    "discounts": { "status": "missing" },
+    "total": { "value": 7.00, "status": "ok", "confidence": 0.98, "evidence": { "text_line_indices": [7] } },
+    "payment_method": { "value": "VISA ****4242", "status": "ok", "confidence": 0.93, "evidence": { "text_line_indices": [8] } },
+    "receipt_number": { "value": "48213", "status": "ok", "confidence": 0.95, "evidence": { "text_line_indices": [9] } },
+    "line_items": [
+      {
+        "status": "ok",
+        "evidence": { "text_line_indices": [3] },
+        "description": { "value": "Milk 2% 1L", "status": "ok", "confidence": 0.95, "evidence": { "text_line_indices": [3] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.6, "evidence": { "text_line_indices": [3] } },
+        "unit_price": { "value": 3.49, "status": "ok", "confidence": 0.95, "evidence": { "text_line_indices": [3] } },
+        "item_total": { "value": 3.49, "status": "ok", "confidence": 0.95, "evidence": { "text_line_indices": [3] } }
+      },
+      {
+        "status": "ok",
+        "evidence": { "text_line_indices": [4] },
+        "description": { "value": "Whole Wheat Bread", "status": "ok", "confidence": 0.94, "evidence": { "text_line_indices": [4] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.6, "evidence": { "text_line_indices": [4] } },
+        "unit_price": { "value": 2.99, "status": "ok", "confidence": 0.94, "evidence": { "text_line_indices": [4] } },
+        "item_total": { "value": 2.99, "status": "ok", "confidence": 0.94, "evidence": { "text_line_indices": [4] } }
+      }
+    ]
+  }
+}
