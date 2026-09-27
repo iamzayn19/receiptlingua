@@ -117,7 +117,11 @@ RSpec.describe "ReceiptLingua::ReceiptOCR#scan (real Python CLI integration)" do
     skip "tam.traineddata not discoverable by tesseract in this environment" unless tesseract_lang_available?("tam")
 
     ocr = ReceiptLingua::ReceiptOCR.new(cli_command: @cli_command)
-    result = ocr.scan(TAM_FIXTURE)
+    # Without an explicit language hint, Tesseract defaults to English-only
+    # recognition and won't produce Tamil script at all -- this isn't a UTF-8
+    # bug, it's the documented lack of an automatic language-ID pre-pass
+    # (see python packaging milestone notes).
+    result = ocr.scan(TAM_FIXTURE, languages: ["tam"])
 
     expect(result.full_text.encoding).to eq(Encoding::UTF_8)
     expect(result.full_text).to be_valid_encoding
