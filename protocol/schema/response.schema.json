@@ -16,7 +16,8 @@
     "scripts",
     "full_text",
     "text_lines",
-    "warnings"
+    "warnings",
+    "fields"
   ],
   "properties": {
     "schema_version": {
@@ -74,9 +75,81 @@
       "type": "array",
       "description": "Non-fatal issues encountered while processing (e.g. low confidence, partial detection).",
       "items": { "type": "string" }
+    },
+    "fields": {
+      "$ref": "#/$defs/structured_fields"
     }
   },
   "$defs": {
+    "field_status": {
+      "type": "string",
+      "description": "Confidence/derivation status of a structured field extraction.",
+      "enum": ["ok", "inferred_field", "uncertain", "missing"]
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Links a structured field's value back to the source text_lines/words it was derived from.",
+      "additionalProperties": false,
+      "properties": {
+        "text_line_indices": {
+          "type": "array",
+          "description": "Indices into the top-level text_lines array.",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "word_indices": {
+          "type": "array",
+          "description": "Indices into the top-level words array, when word-level detail is present.",
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "scalar_field": {
+      "type": "object",
+      "description": "Generic wrapper for a single extracted structured field value.",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "value": {},
+        "status": { "$ref": "#/$defs/field_status" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      }
+    },
+    "line_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "description": { "$ref": "#/$defs/scalar_field" },
+        "quantity": { "$ref": "#/$defs/scalar_field" },
+        "unit_price": { "$ref": "#/$defs/scalar_field" },
+        "item_total": { "$ref": "#/$defs/scalar_field" },
+        "status": { "$ref": "#/$defs/field_status" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      }
+    },
+    "structured_fields": {
+      "type": "object",
+      "description": "Receipt fields extracted from the recognized text, each carrying its own status and evidence back to text_lines/words.",
+      "additionalProperties": false,
+      "properties": {
+        "merchant": { "$ref": "#/$defs/scalar_field" },
+        "merchant_address": { "$ref": "#/$defs/scalar_field" },
+        "date": { "$ref": "#/$defs/scalar_field" },
+        "time": { "$ref": "#/$defs/scalar_field" },
+        "currency": { "$ref": "#/$defs/scalar_field" },
+        "subtotal": { "$ref": "#/$defs/scalar_field" },
+        "tax": { "$ref": "#/$defs/scalar_field" },
+        "discounts": { "$ref": "#/$defs/scalar_field" },
+        "total": { "$ref": "#/$defs/scalar_field" },
+        "payment_method": { "$ref": "#/$defs/scalar_field" },
+        "receipt_number": { "$ref": "#/$defs/scalar_field" },
+        "line_items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/line_item" }
+        }
+      }
+    },
     "recognition_status": {
       "type": "string",
       "description": "Status of a recognized unit (line, word, or structured field).",
