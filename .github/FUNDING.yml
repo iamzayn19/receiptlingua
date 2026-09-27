@@ -1,0 +1,13 @@
+# Funding platform configuration for the "Sponsor" button on GitHub.
+#
+# Deliberately left empty: no funding platform account (GitHub Sponsors,
+# Ko-fi, Open Collective, Patreon, etc.) has actually been set up for this
+# project yet. Do not fill in a username here speculatively -- an
+# incorrect or invented identifier here would point real donations at the
+# wrong (or nonexistent) account. Uncomment and fill in the relevant line
+# below only once the project owner has actually created that account.
+#
+# github: [iamzayn19]
+# ko_fi: TODO-not-yet-created
+# open_collective: TODO-not-yet-created
+# custom: # ["https://example.com/donate"]
