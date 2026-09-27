@@ -51,7 +51,9 @@ def _probe_tesseract() -> BackendCapability:
         return BackendCapability("tesseract", False, f"tesseract --version failed: {exc}")
 
     if result.returncode != 0:
-        return BackendCapability("tesseract", False, f"tesseract --version exited {result.returncode}")
+        return BackendCapability(
+            "tesseract", False, f"tesseract --version exited {result.returncode}"
+        )
 
     version_line = result.stdout.splitlines()[0] if result.stdout else "unknown version"
     return BackendCapability("tesseract", True, version_line)

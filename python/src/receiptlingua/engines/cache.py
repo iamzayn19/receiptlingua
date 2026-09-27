@@ -78,7 +78,9 @@ class CacheManager:
             return ()
         return tuple(sorted(p.stem for p in tessdata.glob("*.traineddata")))
 
-    def require_tesseract_language(self, lang: str, *, extra_search_dirs: tuple[Path, ...] = ()) -> Path:
+    def require_tesseract_language(
+        self, lang: str, *, extra_search_dirs: tuple[Path, ...] = ()
+    ) -> Path:
         """Return the path to ``<lang>.traineddata`` or raise ModelNotFoundError.
 
         Checks our own cache dir plus any ``extra_search_dirs`` (e.g. the
