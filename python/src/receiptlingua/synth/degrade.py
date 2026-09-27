@@ -129,7 +129,9 @@ def perspective_warp(img: Image.Image, seed: int, *, max_shift_frac: float = 0.0
     max_shift = max_shift_frac * min(w, h)
 
     def jitter() -> tuple[float, float]:
-        return (float(rng.uniform(-max_shift, max_shift)), float(rng.uniform(-max_shift, max_shift)))
+        dx = float(rng.uniform(-max_shift, max_shift))
+        dy = float(rng.uniform(-max_shift, max_shift))
+        return (dx, dy)
 
     src = [(0, 0), (w, 0), (w, h), (0, h)]
     dst = [(x + dx, y + dy) for (x, y), (dx, dy) in zip(src, [jitter() for _ in src], strict=True)]
@@ -171,7 +173,9 @@ def low_contrast_fade(img: Image.Image, seed: int) -> Image.Image:
     return _to_image(arr)
 
 
-def wrinkle_warp(img: Image.Image, seed: int, *, amplitude: float = 4.0, wavelength: float = 40.0) -> Image.Image:
+def wrinkle_warp(
+    img: Image.Image, seed: int, *, amplitude: float = 4.0, wavelength: float = 40.0
+) -> Image.Image:
     """A local sinusoidal displacement-map warp approximating creases/
     wrinkles in a photographed paper receipt (best-effort, not a physically
     accurate cloth/paper simulation)."""
@@ -185,7 +189,9 @@ def wrinkle_warp(img: Image.Image, seed: int, *, amplitude: float = 4.0, wavelen
     dy = amplitude * np.sin(2 * np.pi * xx / wavelength + phase_y)
     map_x = (xx + dx).astype(np.float32)
     map_y = (yy + dy).astype(np.float32)
-    warped = cv2.remap(arr, map_x, map_y, interpolation=cv2.INTER_LINEAR, borderValue=(255, 255, 255))
+    warped = cv2.remap(
+        arr, map_x, map_y, interpolation=cv2.INTER_LINEAR, borderValue=(255, 255, 255)
+    )
     return _to_image(warped)
 
 
@@ -214,7 +220,7 @@ def identity(img: Image.Image, seed: int) -> Image.Image:
 #: name -> callable(img, seed) -> img. This is the set of degradations
 #: actually implemented for real; "clean" (identity) is always included as
 #: the undegraded baseline case.
-DEGRADATIONS: dict[str, "object"] = {
+DEGRADATIONS: dict[str, object] = {
     "clean": identity,
     "rotation": rotation,
     "gaussian_blur": gaussian_blur,

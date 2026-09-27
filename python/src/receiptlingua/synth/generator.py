@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import json
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -37,8 +37,16 @@ from PIL import Image, ImageDraw, ImageFont
 # the same font choices already proven to work in
 # python/tests/fixtures/generate.py's OCR smoke fixtures.
 FONTS: dict[str, dict[str, str]] = {
-    "en": {"font": "/System/Library/Fonts/Supplemental/Arial.ttf", "script": "Latn", "rtl": "false"},
-    "ta": {"font": "/System/Library/Fonts/Supplemental/Tamil MN.ttc", "script": "Taml", "rtl": "false"},
+    "en": {
+        "font": "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "ta": {
+        "font": "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
+        "script": "Taml",
+        "rtl": "false",
+    },
     # NOTE: SFArabic.ttf/SFHebrew.ttf (Apple's native Arabic/Hebrew system
     # fonts) were tried first and do render their own scripts correctly,
     # but were verified (via PIL ImageFont.getmask bbox probing -- see
@@ -51,13 +59,21 @@ FONTS: dict[str, dict[str, str]] = {
     # correct glyphs for Latin digits/punctuation *and* Arabic/Hebrew
     # letterforms (including the presentation-forms glyphs
     # ``arabic_reshaper`` output needs), so it is used for both.
-    "ar": {"font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", "script": "Arab", "rtl": "true"},
+    "ar": {
+        "font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "script": "Arab",
+        "rtl": "true",
+    },
     "hi": {
         "font": "/System/Library/Fonts/Supplemental/Devanagari Sangam MN.ttc",
         "script": "Deva",
         "rtl": "false",
     },
-    "he": {"font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", "script": "Hebr", "rtl": "true"},
+    "he": {
+        "font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "script": "Hebr",
+        "rtl": "true",
+    },
 }
 
 #: Languages this generator can actually render right now. Do not add a
@@ -76,7 +92,18 @@ _WORD_BANKS: dict[str, dict[str, list[str]]] = {
         "store_prefix": ["Sunny", "Golden", "Corner", "Blue", "Maple", "River", "Silver", "Green"],
         "store_suffix": ["Market", "Grocers", "Mart", "Store", "Bazaar", "Depot", "Shop"],
         "street": ["Oak", "Main", "Elm", "Pine", "Cedar", "Birch", "Lake", "Hill"],
-        "items": ["Milk", "Bread", "Eggs", "Coffee", "Rice", "Butter", "Apples", "Soap", "Tea", "Sugar"],
+        "items": [
+            "Milk",
+            "Bread",
+            "Eggs",
+            "Coffee",
+            "Rice",
+            "Butter",
+            "Apples",
+            "Soap",
+            "Tea",
+            "Sugar",
+        ],
         "city": ["Springfield", "Fairview", "Riverton", "Hillcrest"],
     },
     "ta": {
@@ -256,7 +283,9 @@ def generate_receipt(
 
     lines: list[str] = [merchant, address, f"{date} {time_str}"]
     for li in items:
-        lines.append(f"{li.description} {li.quantity} x {_fmt_amount(li.unit_price)} {_fmt_amount(li.item_total)}")
+        unit_price = _fmt_amount(li.unit_price)
+        item_total = _fmt_amount(li.item_total)
+        lines.append(f"{li.description} {li.quantity} x {unit_price} {item_total}")
     lines.append(f"SUBTOTAL {_fmt_amount(subtotal)}")
     lines.append(f"TAX {_fmt_amount(tax)}")
     lines.append(f"TOTAL {_fmt_amount(total)} {currency}")
