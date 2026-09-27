@@ -30,8 +30,10 @@ jobs:
       - name: pip-audit
         # --skip-editable: the project itself is installed with `pip install -e .`
         # and isn't published to PyPI yet, so pip-audit can't (and shouldn't try
-        # to) look it up as a third-party dependency.
-        run: pip-audit --strict --skip-editable
+        # to) look it up as a third-party dependency. --strict would turn that
+        # skip notice itself into a hard error, so it's intentionally omitted;
+        # pip-audit still exits non-zero on any real vulnerability finding.
+        run: pip-audit --skip-editable
 
   npm-audit:
     runs-on: ubuntu-latest
