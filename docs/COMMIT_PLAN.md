@@ -1,0 +1,82 @@
+# Commit Plan (target: ~200 atomic commits)
+
+This plan is directional, not a rigid script. Commits will be added, split, or
+merged as implementation reveals better boundaries; this file is updated as
+that happens rather than followed blindly.
+
+## 1-15 Bootstrap
+1. chore: initialize monorepo skeleton
+2. docs: add feasibility note (ADR 0001)
+3. docs: add commit plan
+4. chore: add LICENSE (Apache-2.0)
+5. chore: add NOTICE
+6. docs: add README skeleton
+7. docs: add CONTRIBUTING
+8. docs: add CODE_OF_CONDUCT
+9. docs: add SECURITY policy
+10. docs: add SUPPORT
+11. docs: add ROADMAP
+12. docs: add ARCHITECTURE overview
+13. chore: add .gitignore for python/js/ruby/models/datasets
+14. chore: add EditorConfig and base lint configs
+15. chore: add FUNDING.yml placeholder (no identifiers yet)
+
+## 16-30 Protocol/schema
+16-30. Define JSON schema_version 0.1, request/response envelope, error codes,
+language/script objects, box/polygon types, protocol conformance fixtures,
+protocol README, versioning policy.
+
+## 31-55 Preprocessing
+31-55. Image loading/validation, EXIF normalization, orientation detection,
+document boundary detection, perspective correction, deskew, CLAHE,
+adaptive threshold, denoise, sharpen, gamma/illumination correction,
+quality-heuristic scorer, candidate pipeline orchestration, unit tests per
+stage.
+
+## 56-80 OCR engine abstraction
+56-80. Engine interface, PaddleOCR backend adapter, Tesseract fallback
+adapter, Surya benchmark-only adapter, fast/accurate/auto mode selection,
+model download/cache manager, offline error handling, backend capability
+probing (MPS/CPU/CUDA), batching support.
+
+## 81-100 Language/script detection
+81-100. Unicode script segmentation, line/region-level script tagging,
+language ID integration, mixed-script/RTL handling, confidence thresholds,
+model_supported vs receipt_verified matrix generation.
+
+## 101-120 Structured receipt extraction
+101-120. Reading-order reconstruction, merchant/date/time/currency/total
+extraction rules, line-item table extraction, evidence/provenance linking,
+uncertain/illegible/truncated/missing_region field states.
+
+## 121-140 Python packaging/CLI
+121-140. `receiptlingua` package layout, `ReceiptOCR` API, CLI (`scan`,
+`languages`, `models`, `doctor`, `benchmark`, `cache info`), pyproject/uv
+setup, ruff/mypy/pytest wiring, packaging smoke tests.
+
+## 141-155 JavaScript client
+141-155. TypeScript client package, sidecar process manager, protocol
+client, vitest suite, eslint/prettier config, npm packaging.
+
+## 156-170 Ruby client
+156-170. Gem structure, sidecar client, RSpec suite, rubocop config,
+gemspec, packaging.
+
+## 171-185 Datasets/benchmarking
+171-185. `datasets/registry.yaml`, license-audited downloader scripts,
+synthetic receipt generator, deterministic corruption pipeline, benchmark
+harness, CER/WER/field-accuracy metrics, BENCHMARKS.md report generation.
+
+## 186-195 Website/docs/security/release automation
+186-195. GitHub Pages site, LANGUAGES.md matrix page, CI workflows
+(python/node/ruby/lint/security), SBOM generation, Dependabot config,
+release workflow drafts (no auto-publish yet).
+
+## 196-200 Release hardening
+196-200. Cross-language conformance test run, offline-mode validation,
+first real tagged pre-release, final README pass, blockers doc for
+owner-only actions (npm login, gem signin, GitHub repo creation confirm).
+
+---
+
+Status: commits 1-15 in progress as of 2026-09-27.
