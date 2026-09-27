@@ -63,9 +63,20 @@ client, vitest suite, eslint/prettier config, npm packaging.
 gemspec, packaging.
 
 ## 171-185 Datasets/benchmarking
-171-185. `datasets/registry.yaml`, license-audited downloader scripts,
-synthetic receipt generator, deterministic corruption pipeline, benchmark
-harness, CER/WER/field-accuracy metrics, BENCHMARKS.md report generation.
+
+**Status: done for this pass (real numbers, not aspirational).**
+`datasets/registry.yaml` (synthetic-only, no external dataset yet),
+synthetic receipt generator + seeded degradation pipeline (14 real
+degradation types, 2 deferred -- see `synth/degrade.py`), benchmark harness
+(`benchmarks/run_benchmark.py`), CER/WER/fuzzy-match metrics
+(`benchmarks/metrics.py`), and a real executed 350-case benchmark run
+across 5 languages (en/ta/ar/hi/he) x 14 degradations on the Tesseract
+backend, reported honestly in `BENCHMARKS.md` (headline: mean CER 0.62,
+mean WER 1.06 overall, but English alone is CER 0.11 / 68.6%
+full-record-exact-match; Arabic/Hebrew RTL scripts have CER > 1.0, a real
+quality gap). PaddleOCR backend and 10,000+ case scale are explicitly out
+of scope for this pass -- see BENCHMARKS.md "What would need to happen to
+scale this to 10,000+ cases" for the concrete next steps.
 
 ## 186-195 Website/docs/security/release automation
 186-195. GitHub Pages site, LANGUAGES.md matrix page, CI workflows
