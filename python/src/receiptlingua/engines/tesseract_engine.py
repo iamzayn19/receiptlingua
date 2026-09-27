@@ -13,6 +13,7 @@ import importlib.util
 import shutil
 
 import numpy as np
+from bidi.algorithm import get_display
 
 from receiptlingua.engines.base import OCREngine
 from receiptlingua.engines.cache import CacheManager
@@ -26,6 +27,23 @@ _CONF_SCALE = 100.0
 # Below this Tesseract confidence, a line is reported as "uncertain"
 # rather than "ok" -- never silently upgraded to a confident result.
 _UNCERTAIN_CONFIDENCE_THRESHOLD = 0.4
+
+# Tesseract langpack codes (its own naming, e.g. "ara"/"heb", not this
+# project's ISO 639-1 codes) whose script is right-to-left. Verified by
+# direct inspection: Tesseract's ``image_to_data``/``image_to_string``
+# output for these emits each RTL line in *visual* order (i.e. as if you
+# mirrored the printed line left-to-right) rather than logical Unicode
+# reading order -- confirmed by comparing raw ``pytesseract`` output
+# against known ground truth: e.g. the Arabic word for "rice" ("أرز")
+# came back from Tesseract as "زرأ" (its own characters reversed), and
+# whole recognized lines came back as the reverse of the correct logical
+# string. Running that output back through ``python-bidi``'s
+# ``get_display`` (the same function used to go logical->visual for
+# rendering) restores the correct logical-order text, because this
+# specific bidi transform is its own inverse for the single-level
+# RTL-paragraph-with-embedded-LTR-numbers case these receipts are -- this
+# was verified empirically against real OCR output, not assumed.
+_RTL_TESSERACT_LANGS = frozenset({"ara", "heb"})
 
 
 class TesseractEngine(OCREngine):
@@ -109,7 +127,8 @@ class TesseractEngine(OCREngine):
         except Exception as exc:  # pragma: no cover - defensive
             raise OCRFailedError(self.name, f"unexpected failure: {exc}") from exc
 
-        text_lines = _group_into_lines(data)
+        is_rtl = any(lang in _RTL_TESSERACT_LANGS for lang in languages)
+        text_lines = _group_into_lines(data, fix_rtl=is_rtl)
         warnings: list[str] = []
         if not text_lines:
             warnings.append("no text detected")
@@ -122,13 +141,21 @@ class TesseractEngine(OCREngine):
         )
 
 
-def _group_into_lines(data: dict) -> list[EngineTextLine]:
+def _group_into_lines(data: dict, *, fix_rtl: bool = False) -> list[EngineTextLine]:
     """Group pytesseract's flat word-level TSV-style dict into text lines.
 
     ``data`` follows ``pytesseract.image_to_data`` output_type=DICT shape:
     parallel lists keyed by ``level``/``page_num``/``block_num``/
     ``par_num``/``line_num``/``word_num``/``left``/``top``/``width``/
     ``height``/``conf``/``text``.
+
+    ``fix_rtl``: when True (Arabic/Hebrew languages -- see
+    ``_RTL_TESSERACT_LANGS``), each assembled line's text is run through
+    ``get_display`` to undo Tesseract's visual-order RTL output and
+    recover logical Unicode order. Word bounding boxes (used for layout)
+    are left untouched -- only the line's ``text`` field is corrected,
+    since that is what downstream field extraction and CER comparisons
+    actually read.
     """
     n = len(data.get("text", []))
     lines_by_key: dict[tuple[int, int, int], list[int]] = {}
@@ -168,9 +195,12 @@ def _group_into_lines(data: dict) -> list[EngineTextLine]:
         )
         line_conf = sum(confs) / len(confs)
         line_status = "ok" if line_conf >= _UNCERTAIN_CONFIDENCE_THRESHOLD else "uncertain"
+        line_text = " ".join(w.text for w in words)
+        if fix_rtl:
+            line_text = get_display(line_text)
         result.append(
             EngineTextLine(
-                text=" ".join(w.text for w in words),
+                text=line_text,
                 bbox=line_bbox,
                 confidence=line_conf,
                 status=line_status,
