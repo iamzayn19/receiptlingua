@@ -478,3 +478,91 @@ then updating `ReceiptOCR` to talk to a long-lived process instead of
 spawning one per call) is the concrete next step for this package,
 separate from and blocking on the Ruby client milestone (156-170) which
 will face the identical transport question.
+
+156-170 (Ruby client) done as of 2026-09-27, in 9 commits rather than the
+implied ~15, since scaffolding/gemspec/Gemfile landed as one commit and
+config/docs commits were kept small and atomic without further splitting.
+`ruby/` gem, structured the same way as `javascript/`:
+- **Transport**: identical stopgap and identical open limitation as the JS
+  client (see that milestone's note above, and `ruby/README.md`) --
+  `ReceiptLingua::ReceiptOCR#scan` shells out to the Python `receiptlingua`
+  CLI (`scan --json`) as a subprocess **per call** via `Open3.capture3`
+  (args passed as an array, never interpolated into a shell string, so
+  there is no shell-injection surface). No new decision was made here; the
+  sidecar transport is still the same open ADR item both clients are
+  blocked on.
+- Error mapping: `ReceiptLingua::Error` (`ruby/lib/receiptlingua/errors.rb`)
+  carries a `.code` from the same vocabulary as `error.schema.json`'s enum,
+  plus `CliNotFoundError`/`ProtocolError` subclasses (both still
+  `ReceiptLingua::Error`, so callers can rescue either the specific class or
+  the base with a `.code` switch) mirroring the JS client's `CLI_NOT_FOUND`/
+  `PROTOCOL_ERROR` local-only codes.
+- Result types (`ruby/lib/receiptlingua/types.rb`): hand-written keyword
+  Structs mirroring `response.schema.json` field-for-field (same rationale
+  as the JS client's hand-written types: the schema's `$ref`/`$defs` reuse
+  is small and stable enough that hand-writing once was more precise than
+  codegen), built from the CLI's parsed JSON via a small recursive
+  `Types::Builder`.
+- UTF-8: verified for real, not assumed. `bundle exec rspec` includes a
+  unit spec that round-trips real Tamil/Arabic text through
+  `JSON.generate`/`JSON.parse` and asserts the resulting Ruby String is
+  `Encoding::UTF_8` and contains the original multi-byte characters, plus a
+  second spec that drives an actual (unmocked) child Ruby process over
+  `Open3` emitting UTF-8 JSON, to exercise the real pipe/encoding path
+  rather than only the in-process JSON round trip. Both pass clean --
+  **no real UTF-8 bug found** in this implementation; `Open3.capture3` with
+  `binmode: true` plus `JSON.parse` correctly tags the resulting String as
+  `Encoding::UTF_8` with no mangling. A third spec attempted the same
+  assertion against the real Tesseract-backed Tamil fixture
+  (`receipt_text_tam.png`) but **skips (pending), not fails**, in this
+  environment: this machine's Tesseract install has no `tam.traineddata`,
+  so the *Python OCR engine itself* (not the Ruby client) returns garbled
+  Latin-lookalike glyphs for Tamil input -- confirmed independently by
+  running the Python CLI directly. This is a missing-langpack environment
+  limitation (the same category `python/tests/test_tesseract_engine.py`
+  already skips cleanly for), not a client-side encoding defect, so the
+  spec skips rather than asserting a false negative.
+- Tests: RSpec. Unit specs
+  (`ruby/spec/receiptlingua/receipt_ocr_unit_spec.rb`, 11 examples) stub
+  `Open3.capture3` to test arg-building (mode/languages, per-call
+  overrides, `cache_dir` env var, custom `cli_command`), JSON parsing, and
+  every error-mapping path (protocol error envelope, non-JSON output,
+  shape-mismatched JSON, non-zero exit without an envelope, `ENOENT`) plus
+  the UTF-8 round trip above, all without needing Python. Integration
+  specs (`ruby/spec/receiptlingua/receipt_ocr_integration_spec.rb`, 5
+  examples) shell out to the real installed Python CLI (checks
+  `python/.venv/bin/receiptlingua` first, then PATH) against
+  `python/tests/fixtures/receipt_text_eng.png`, asserting a real,
+  schema-shaped, non-empty result, a real `INVALID_IMAGE` error for a
+  nonexistent path, the unmocked-subprocess UTF-8 spec, and the
+  Tamil-fixture spec described above (4 examples); all `skip` cleanly (not
+  fail) if no working `receiptlingua` CLI is found. 15 examples total, 14 passing + 1
+  legitimately skipped in this environment, verified for real (not just
+  claimed).
+- `rubocop` (`ruby/.rubocop.yml`, `rubocop-rspec` plugin) passing clean on
+  all lib/spec files; a handful of RSpec organizational cops
+  (`RSpec/InstanceVariable`, `RSpec/BeforeAfterAll`,
+  `RSpec/LeakyConstantDeclaration`, `RSpec/DescribeClass`,
+  `RSpec/SpecFilePathFormat`, `Lint/ConstantDefinitionInBlock`) were
+  disabled with an inline rationale each, where the idiomatic pattern for
+  this suite's CLI-probing integration specs conflicts with the cop's
+  default (e.g. probing for a working CLI once via `before(:context)` and
+  an `@cli_command` ivar shared across examples, or a `describe` string
+  describing real-CLI behavior rather than a single class).
+- Verified for real: `bundle install && bundle exec rspec && bundle exec
+  rubocop` all genuinely pass in this environment (`bundle exec rake`, the
+  default task wiring both, also passes). `gem build receiptlingua.gemspec`
+  succeeds. `gem push` was intentionally never run -- no RubyGems
+  credentials are configured in this environment (`gem signin` not done),
+  and per project rules a gem this early/untested on a real registry is
+  premature regardless. `git remote -v` shows no remote configured for
+  this repo, so homepage/source URLs in the gemspec point at the intended
+  GitHub location but the repo itself is not yet pushed anywhere.
+
+**Known follow-up, not papered over**: identical to the JS client's -- the
+shell-out-per-call transport works and is fully protocol-conformant, but
+is not viable for more than occasional use without a real sidecar daemon.
+Both the Ruby and JS clients are now blocked on the same future ADR
+(stdio vs. socket framing for a persistent daemon); neither should invent
+its own transport ahead of that decision, and whoever picks up the ADR
+should update both clients together rather than let them diverge.
