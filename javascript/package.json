@@ -1,0 +1,56 @@
+{
+  "name": "receiptlingua",
+  "version": "0.1.0-dev.0",
+  "description": "Offline-first, multilingual receipt OCR (JavaScript/TypeScript client for the receiptlingua Python engine)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamzayn19/receiptlingua.git",
+    "directory": "javascript"
+  },
+  "bugs": {
+    "url": "https://github.com/iamzayn19/receiptlingua/issues"
+  },
+  "homepage": "https://github.com/iamzayn19/receiptlingua#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src test",
+    "format": "prettier --check src test",
+    "format:write": "prettier --write src test",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ocr",
+    "receipt",
+    "multilingual",
+    "tesseract",
+    "paddleocr"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^22.9.0",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0",
+    "vitest": "^2.1.4"
+  }
+}
