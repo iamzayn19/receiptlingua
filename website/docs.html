@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ReceiptLingua — Docs</title>
+<meta name="description" content="Documentation, roadmap, architecture, security, and contributing links for ReceiptLingua." />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html">ReceiptLingua</a>
+  <nav class="site-nav">
+    <a href="index.html">Home</a>
+    <a href="languages.html">Languages</a>
+    <a href="benchmarks.html">Benchmarks</a>
+    <a href="docs.html" class="active">Docs</a>
+    <a href="support.html">Support</a>
+  </nav>
+</header>
+<main>
+  <h1>Docs</h1>
+  <p class="tagline">
+    All primary documentation lives in the repository itself, so it can
+    never drift out of sync with the code. This page is just a set of
+    links.
+  </p>
+
+  <h2>Project</h2>
+  <ul>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/README.md">README</a> — quick start for all three ecosystems.</li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/ROADMAP.md">ROADMAP.md</a> — high-level milestones.</li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/docs/COMMIT_PLAN.md">docs/COMMIT_PLAN.md</a> — the detailed, honestly-tracked commit-by-commit plan and status.</li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/ARCHITECTURE.md">ARCHITECTURE.md</a> — how the pipeline, engines, and language layer fit together.</li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/LANGUAGES.md">LANGUAGES.md</a> — full language support matrix (also rendered on the <a href="languages.html">Languages</a> page).</li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/BENCHMARKS.md">BENCHMARKS.md</a> — real benchmark results (also on the <a href="benchmarks.html">Benchmarks</a> page).</li>
+  </ul>
+
+  <h2>Contributing &amp; governance</h2>
+  <ul>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a></li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a></li>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/tree/main/docs/adr">Architecture Decision Records (docs/adr/)</a></li>
+  </ul>
+
+  <h2>Security</h2>
+  <ul>
+    <li><a href="https://github.com/iamzayn19/receiptlingua/blob/main/SECURITY.md">SECURITY.md</a> — how to report a vulnerability, scope, supported versions.</li>
+    <li>
+      Dependency scanning: Dependabot (pip/npm/bundler/github-actions) and
+      a weekly <code>security.yml</code> CI workflow running
+      <code>pip-audit</code>, <code>npm audit</code>,
+      <code>bundler-audit</code>, and secret scanning.
+    </li>
+  </ul>
+
+  <h2>CI/CD</h2>
+  <p>
+    All workflows live under
+    <a href="https://github.com/iamzayn19/receiptlingua/tree/main/.github/workflows">.github/workflows/</a>:
+    fast per-language test suites on every PR, a separate manual/weekly
+    heavyweight OCR benchmark workflow (never on every PR), security
+    scanning, and this site's own deploy workflow.
+  </p>
+</main>
+<footer>
+  <p>
+    ReceiptLingua is open source (Apache-2.0).
+    <a href="https://github.com/iamzayn19/receiptlingua">Source on GitHub</a>.
+    No analytics or trackers on this site.
+  </p>
+</footer>
+</body>
+</html>
