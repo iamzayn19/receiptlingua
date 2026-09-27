@@ -778,3 +778,75 @@ multi-client sharing of one daemon (deliberately out of scope, see ADR
 0003); a crashed/hung daemon is torn down and the triggering call fails
 cleanly, with the *next* call transparently starting a fresh one (that
 next call re-pays the model-load cost).
+
+## Synth generator language expansion (5 -> 25 languages)
+
+`python/src/receiptlingua/synth/generator.py` previously only supported
+5 languages (en, ta, ar, hi, he), gated on a real font existing on disk
+*and* bbox-verified (via `PIL.ImageFont.getmask(ch).getbbox()` probing)
+to actually have usable glyphs rather than silent `.notdef` tofu boxes.
+This milestone re-ran that exact verification method against every font
+candidate for all 32 of the project's mandatory languages, on this
+machine (macOS Apple Silicon), and added every language where both a
+real, verified font **and** vocabulary the author was actually confident
+was correct existed.
+
+**Added (20 new languages, verified font + vocabulary; 25 total with the
+original 5):**
+
+- Latin-diacritic, `Arial.ttf` (already verified for `en`; re-probed with
+  each language's own accented letters): French (`fr`), German (`de`),
+  Spanish (`es`), Portuguese (`pt`), Italian (`it`), Dutch (`nl`),
+  Turkish (`tr`), Polish (`pl`), Indonesian (`id`), Malay (`ms`),
+  Vietnamese (`vi`).
+- Cyrillic, `Arial.ttf` (bbox-probed with real Cyrillic letters, all
+  distinct from each other and from ASCII): Russian (`ru`), Ukrainian
+  (`uk`).
+- Arabic-script, `Arial Unicode.ttf` (already verified for `ar`/`he`;
+  re-probed with each language's extra letters): Persian (`fa`; extra
+  letters پ چ ژ گ), Urdu (`ur`; retroflex letters ٹ ڈ ڑ, ں, ھ, ۓ). Both
+  get the same `arabic_reshaper` + `python-bidi` treatment already used
+  for `ar`. **Rejected candidate**: `SFArabic.ttf` (Apple's native Arabic
+  font) was bbox-probed for Persian and rejected -- it has the same
+  ASCII-digit `.notdef` bug documented earlier for `ar`/`he`.
+  `DecoTypeNastaleeqUrdu.ttc` and `NotoNastaliq.ttc` were also probed for
+  Urdu and do render genuine Nastaliq glyphs, but `Arial Unicode.ttf` was
+  kept for consistency with the other Arabic-script languages rather than
+  introducing a third rendering style without a concrete reason to prefer
+  it.
+- Devanagari, `Devanagari Sangam MN.ttc` (already verified for `hi`):
+  Marathi (`mr`).
+- CJK: Chinese Simplified (`zh-Hans`) and Traditional (`zh-Hant`), both
+  on `Songti.ttc`; Japanese (`ja`) on `ヒラギノ角ゴシック W3.ttc`
+  (Hiragino Kaku Gothic W3 -- bbox-probed with real hiragana/katakana/
+  kanji); Korean (`ko`) on `AppleSDGothicNeo.ttc`.
+
+**Font verified but rejected anyway, for lack of confident vocabulary**
+(these have real, bbox-verified, non-tofu fonts on this machine --
+`Telugu Sangam MN.ttc`, `Bangla Sangam MN.ttc`, `Gurmukhi Sangam MN.ttc`,
+`Gujarati Sangam MN.ttc`, `Kannada Sangam MN.ttc`, `Malayalam Sangam
+MN.ttc`, `Thonburi.ttc` for Thai -- so a future pass with a
+confidently-verified vocabulary source can add them purely as a data
+change): Telugu, Bengali, Punjabi, Gujarati, Kannada, Malayalam, Nepali,
+Thai. The author was not confident enough in hand-recalled everyday-
+receipt vocabulary (merchant/item words) in these languages to avoid
+risking fabricated-looking foreign text, per this project's standing
+rule against inventing placeholder foreign-language content. Nepali in
+particular was excluded despite sharing Devanagari with Hindi/Marathi,
+because its actual word choices differ from both and the author was not
+confident which recalled words were genuinely Nepali versus Hindi/
+Marathi bleed-through.
+
+**Verification artifact**: every font candidate above was checked with a
+one-off script (not committed -- ad hoc, run interactively) rendering
+each script's real characters plus ASCII digits/punctuation and
+confirming `ImageFont.getmask(ch).getbbox()` values are not collapsed to
+a single repeated bbox (which would indicate `.notdef` fallback). All 20
+newly-added candidates passed cleanly: distinct bboxes for every distinct
+character probed, including ASCII digits/punctuation alongside each
+non-Latin script.
+
+This is `synth`-generator font support only -- it says nothing about
+`receipt_verified` in `language_matrix.json`/`LANGUAGES.md`, which still
+requires real benchmark evidence on actual receipts, not just a working
+font. See `LANGUAGES.md` for that distinction.
