@@ -45,3 +45,4 @@ benchmarks/results/*.jsonl
 .env
 .env.*
 credentials.json
+.venv-paddle/
