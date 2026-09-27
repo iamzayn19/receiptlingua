@@ -96,6 +96,31 @@ TESSERACT_LANG_MAP: dict[str, str] = {
     "ko": "kor",
 }
 
+#: Non-Latin-script languages whose synthetic receipts still contain a
+#: real, mandatory Latin/ASCII substring: the "SUBTOTAL"/"TAX"/"TOTAL"
+#: field labels and the ASCII-digit amounts themselves (see
+#: ``receiptlingua.synth.generator.generate_receipt`` -- those three
+#: labels and all numeric amounts are always ASCII, in every language,
+#: by design; only the merchant/address/item-description words are
+#: rendered in the receipt's own script). A single non-Latin Tesseract
+#: langpack (e.g. ``rus`` alone) has no Latin letters in its
+#: dictionary/character set, so it doesn't just mis-recognize those
+#: labels -- it actively transliterates them into look-alike
+#: same-script characters (confirmed by direct inspection: "TOTAL" came
+#: back as Cyrillic "ТОТАЕ" under lang="rus", as garbled Devanagari
+#: under lang="hin", as Arabic-lookalike digits under lang="ara"),
+#: which is exactly why ``extract_total``'s keyword search (which only
+#: matches the literal ASCII word "total") found nothing and every one
+#: of these languages measured 0.0% total-exact-match. Passing a
+#: combined language pack (``lang+eng``) to Tesseract -- the documented,
+#: standard mitigation for mixed-script text -- fixes this: verified by
+#: direct reprocessing of ru/hi/ar samples with "rus+eng"/"hin+eng"/
+#: "ara+eng", which recovered the literal "SUBTOTAL"/"TAX"/"TOTAL"
+#: labels and, for ru/ar, the exact correct total value.
+NON_LATIN_TESSERACT_LANGS: frozenset[str] = frozenset(
+    {"ru", "uk", "ko", "ta", "mr", "hi", "he", "ar", "fa", "ur", "zh-Hans", "zh-Hant", "ja"}
+)
+
 #: PaddleOCR's `lang=` parameter uses ISO 639-1 codes DIRECTLY for most
 #: languages (confirmed by reading
 #: .venv-paddle/lib/python3.13/site-packages/paddleocr/_utils/langs.py --
@@ -149,8 +174,20 @@ def run_case(
 
     if backend == "paddleocr":
         engine_lang = PADDLE_LANG_MAP.get(language, language)
+        engine_languages: tuple[str, ...] = (engine_lang,) if language != "en" else ()
     else:
         engine_lang = TESSERACT_LANG_MAP.get(language, language)
+        if language == "en":
+            engine_languages = ()
+        elif language in NON_LATIN_TESSERACT_LANGS:
+            # See NON_LATIN_TESSERACT_LANGS above: without "+eng", a
+            # non-Latin langpack transliterates the receipt's mandatory
+            # ASCII "SUBTOTAL"/"TAX"/"TOTAL" labels and amounts into
+            # garbage, which is the real, verified cause of the 0.0%
+            # total-exact-match rate for these languages.
+            engine_languages = (engine_lang, "eng")
+        else:
+            engine_languages = (engine_lang,)
     # Reuse one ReceiptOCR/engine instance per language across every case in
     # this run (instead of constructing a fresh one per case) so a
     # PaddleOCR backend's persistent sidecar daemon (see
@@ -159,9 +196,7 @@ def run_case(
     # subsequent case for that language warm (~0.5s) -- a fresh instance
     # per case would defeat the whole point of the daemon.
     if language not in ocr_cache:
-        ocr_cache[language] = ReceiptOCR(
-            backend=backend, languages=(engine_lang,) if language != "en" else ()
-        )
+        ocr_cache[language] = ReceiptOCR(backend=backend, languages=engine_languages)
     ocr = ocr_cache[language]
     start = time.perf_counter()
     error = None

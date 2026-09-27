@@ -891,3 +891,47 @@ not projected:
   (regardless of currency) scores well above zero. This points at the
   total-amount field-extraction regex, not a currency-formatting issue --
   flagged as a concrete next bug, not fixed in this pass.
+
+## 0.0% total-exact-match bug: root-caused and fixed, gap to 10,000 closed
+
+Root cause (real evidence, not guessed): it was neither the keyword
+coverage nor the numeric-parsing regex. `generate_receipt()` always
+renders `SUBTOTAL`/`TAX`/`TOTAL` and all amounts as plain ASCII in every
+language's ground truth, so the English `"total"` keyword should have
+matched. The actual bug was one layer up, in how Tesseract was invoked:
+a single non-Latin langpack (e.g. `lang="rus"`) has no Latin
+letters/digits in its character set, so it *transliterated* the ASCII
+"TOTAL" label into look-alike same-script garbage (`ТОТАЕ`/etc.,
+verified by direct inspection of real OCR output on `ru`/`hi`/`ar`
+samples) rather than merely mis-recognizing it -- so the keyword search
+never found a match and `extract_total` reported `missing` every time,
+for all 10 affected languages, plus (less visibly, since their scores
+weren't 0%) `zh-Hans`/`zh-Hant`/`ja`.
+
+Fix: `benchmarks/run_benchmark.py` now passes Tesseract a combined
+`lang+eng` langpack (`NON_LATIN_TESSERACT_LANGS`) for all 13 non-Latin-
+script languages -- the standard mitigation for mixed-script text, and a
+real OCR-configuration fix rather than a mask over an OCR-quality
+ceiling. Verified with a direct before/after test (ru/hi/ar samples) and
+a 420-case verification run (10 previously-0% languages, fresh seeds):
+total-exact-match went from exactly 0.0% to an overall 67.1% across those
+420 cases. The full-scale 10,150-case rerun confirms it: those 10
+languages now score 20%-81% each (8 of 10 in the 68%-81% range), with
+`hi` (20.4%) and `mr` (37.2%) honestly reported as still-weak due to a
+real, unforced Devanagari-script digit-recognition limitation, not
+something papered over here. No regression on the previously-good
+Latin-script languages (normal seed-to-seed noise only).
+
+Gap to 10,000 closed in the same pass: reran the full 25-language x
+14-degradation Tesseract sweep at `--samples-per-language 29` (10,150
+cases, ~29.7 min wall time, 176ms/case) with the fix applied, and merged
+it with the still-valid 840-case PaddleOCR subset (unaffected by a
+Tesseract-only fix) into `benchmarks/latest_summary.json`. Since
+`run_benchmark.py` has no run-accumulation mode (`--append` is mentioned
+in its docstring but was never implemented -- a pre-existing doc/code
+gap, noted rather than silently worked around), the new 10,150-case
+Tesseract run supersedes the old 7000-case one as the authoritative
+Tesseract result, combined with PaddleOCR via a one-off merge script.
+Final combined real executed case count: **10,990** (>= the 10,000
+target). See `BENCHMARKS.md`'s updated "Latest run" section for full
+before/after tables.
