@@ -57,7 +57,7 @@ class ScalarField:
     evidence: Evidence | None = None
 
     @staticmethod
-    def missing() -> "ScalarField":
+    def missing() -> ScalarField:
         """A field that could not be confidently extracted at all -- never a guess."""
         return ScalarField(status="missing")
 

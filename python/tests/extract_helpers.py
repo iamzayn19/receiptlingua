@@ -26,4 +26,6 @@ def make_lines(rows: list[tuple[str, float, float]]) -> list[FakeTextLine]:
 
 def linear_lines(texts: list[str]) -> list[FakeTextLine]:
     """Build a simple top-to-bottom, single-column line list (y increases by row)."""
-    return [FakeTextLine(text=t, bbox=FakeBBox(x=10.0, y=float(i) * 30.0)) for i, t in enumerate(texts)]
+    return [
+        FakeTextLine(text=t, bbox=FakeBBox(x=10.0, y=float(i) * 30.0)) for i, t in enumerate(texts)
+    ]

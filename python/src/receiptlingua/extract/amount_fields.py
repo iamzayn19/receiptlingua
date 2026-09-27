@@ -60,11 +60,15 @@ def _extract_labeled_amount(
     line_indices = tuple(sorted({idx, used_idx}))
     if value is None:
         if ambiguous:
-            return ScalarField(status="uncertain", evidence=Evidence(text_line_indices=line_indices))
+            return ScalarField(
+                status="uncertain", evidence=Evidence(text_line_indices=line_indices)
+            )
         return ScalarField(status="uncertain", evidence=Evidence(text_line_indices=(idx,)))
     if ambiguous:
         return ScalarField(status="uncertain", evidence=Evidence(text_line_indices=line_indices))
-    return ScalarField(status="ok", value=value, confidence=0.8, evidence=Evidence(text_line_indices=line_indices))
+    return ScalarField(
+        status="ok", value=value, confidence=0.8, evidence=Evidence(text_line_indices=line_indices)
+    )
 
 
 def extract_subtotal(lines: list[str]) -> ScalarField:

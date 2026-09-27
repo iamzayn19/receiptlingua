@@ -67,8 +67,13 @@ def extract_line_items(lines: list[str]) -> list[LineItem]:
         if not description:
             continue  # no leading description text -- likely not an item row
 
-        item_total_field = ScalarField(status="ok", value=parsed[-1].value, confidence=0.6, evidence=Evidence(text_line_indices=(idx,)))
-        description_field = ScalarField(status="ok", value=description, confidence=0.5, evidence=Evidence(text_line_indices=(idx,)))
+        line_evidence = Evidence(text_line_indices=(idx,))
+        item_total_field = ScalarField(
+            status="ok", value=parsed[-1].value, confidence=0.6, evidence=line_evidence
+        )
+        description_field = ScalarField(
+            status="ok", value=description, confidence=0.5, evidence=line_evidence
+        )
 
         if len(parsed) >= 3:
             qty, unit_price, item_total = parsed[-3].value, parsed[-2].value, parsed[-1].value
@@ -77,10 +82,14 @@ def extract_line_items(lines: list[str]) -> list[LineItem]:
                     LineItem(
                         status="ok",
                         description=description_field,
-                        quantity=ScalarField(status="ok", value=qty, confidence=0.6, evidence=Evidence(text_line_indices=(idx,))),
-                        unit_price=ScalarField(status="ok", value=unit_price, confidence=0.6, evidence=Evidence(text_line_indices=(idx,))),
+                        quantity=ScalarField(
+                            status="ok", value=qty, confidence=0.6, evidence=line_evidence
+                        ),
+                        unit_price=ScalarField(
+                            status="ok", value=unit_price, confidence=0.6, evidence=line_evidence
+                        ),
                         item_total=item_total_field,
-                        evidence=Evidence(text_line_indices=(idx,)),
+                        evidence=line_evidence,
                     )
                 )
                 continue
@@ -88,14 +97,19 @@ def extract_line_items(lines: list[str]) -> list[LineItem]:
         # Two numbers only, or three that don't reconcile: treat as
         # description + item_total, quantity defaulted (not detected).
         unit_price = parsed[-2].value if len(parsed) >= 2 else None
+        unit_price_field = (
+            ScalarField(status="ok", value=unit_price, confidence=0.5, evidence=line_evidence)
+            if unit_price is not None
+            else None
+        )
         items.append(
             LineItem(
                 status="uncertain" if len(parsed) >= 3 else "ok",
                 description=description_field,
                 quantity=ScalarField(status="inferred_field", value=1, confidence=0.3),
-                unit_price=ScalarField(status="ok", value=unit_price, confidence=0.5, evidence=Evidence(text_line_indices=(idx,))) if unit_price is not None else None,
+                unit_price=unit_price_field,
                 item_total=item_total_field,
-                evidence=Evidence(text_line_indices=(idx,)),
+                evidence=line_evidence,
             )
         )
     return items

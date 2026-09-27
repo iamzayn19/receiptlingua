@@ -53,9 +53,36 @@ _DOLLAR_CODE_HINTS: dict[str, str] = {
 }
 
 _ISO_4217_CODES = (
-    "USD", "EUR", "GBP", "INR", "PKR", "NGN", "JPY", "CNY", "KRW", "PHP",
-    "TRY", "SAR", "AED", "AUD", "CAD", "NZD", "HKD", "SGD", "LKR", "NPR",
-    "BDT", "ZAR", "BRL", "MXN", "IDR", "THB", "VND", "MYR", "EGP", "KES",
+    "USD",
+    "EUR",
+    "GBP",
+    "INR",
+    "PKR",
+    "NGN",
+    "JPY",
+    "CNY",
+    "KRW",
+    "PHP",
+    "TRY",
+    "SAR",
+    "AED",
+    "AUD",
+    "CAD",
+    "NZD",
+    "HKD",
+    "SGD",
+    "LKR",
+    "NPR",
+    "BDT",
+    "ZAR",
+    "BRL",
+    "MXN",
+    "IDR",
+    "THB",
+    "VND",
+    "MYR",
+    "EGP",
+    "KES",
 )
 _ISO_CODE_RE = re.compile(r"\b(" + "|".join(_ISO_4217_CODES) + r")\b")
 
@@ -92,17 +119,32 @@ def detect_currency(lines: list[str]) -> ScalarField:
     # An explicit ISO code is the strongest, least ambiguous signal.
     if iso_hits:
         code, line_idxs = max(iso_hits.items(), key=lambda kv: len(kv[1]))
-        return ScalarField(status="ok", value=code, confidence=0.95, evidence=Evidence(text_line_indices=tuple(line_idxs)))
+        return ScalarField(
+            status="ok",
+            value=code,
+            confidence=0.95,
+            evidence=Evidence(text_line_indices=tuple(line_idxs)),
+        )
 
     if unambiguous_hits:
         code, line_idxs = max(unambiguous_hits.items(), key=lambda kv: len(kv[1]))
-        return ScalarField(status="ok", value=code, confidence=0.85, evidence=Evidence(text_line_indices=tuple(line_idxs)))
+        return ScalarField(
+            status="ok",
+            value=code,
+            confidence=0.85,
+            evidence=Evidence(text_line_indices=tuple(line_idxs)),
+        )
 
     if dollar_hits:
         # Plain "$" with no country prefix: default to USD (most common
         # case in practice) but at reduced confidence since it truly could
         # be another dollar-pegged currency.
-        return ScalarField(status="ok", value="USD", confidence=0.6, evidence=Evidence(text_line_indices=tuple(dollar_hits)))
+        return ScalarField(
+            status="ok",
+            value="USD",
+            confidence=0.6,
+            evidence=Evidence(text_line_indices=tuple(dollar_hits)),
+        )
 
     if ambiguous_hits:
         codes, line_idxs = max(ambiguous_hits.items(), key=lambda kv: len(kv[1]))

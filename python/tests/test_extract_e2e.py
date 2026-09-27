@@ -70,8 +70,8 @@ def test_evidence_indices_survive_reading_order_reconstruction():
     # still point at the ORIGINAL (pre-reorder) text_lines indices.
     lines = make_lines(
         [
-            ("Total 10.00", 10, 60),   # original index 0
-            ("Corner Store", 10, 0),   # original index 1
+            ("Total 10.00", 10, 60),  # original index 0
+            ("Corner Store", 10, 0),  # original index 1
             ("Subtotal 10.00", 10, 30),  # original index 2
         ]
     )

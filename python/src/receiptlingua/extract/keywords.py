@@ -21,28 +21,52 @@ from __future__ import annotations
 # English is the baseline; Arabic/Urdu entries below are standard,
 # widely-used receipt/invoice terms (not idiomatic guesses).
 TOTAL_KEYWORDS: tuple[str, ...] = (
-    "total", "grand total", "amount due", "balance due",
-    "المجموع", "الإجمالي",  # Arabic: al-majmou' / al-ijmali
+    "total",
+    "grand total",
+    "amount due",
+    "balance due",
+    "المجموع",
+    "الإجمالي",  # Arabic: al-majmou' / al-ijmali
 )
 
 SUBTOTAL_KEYWORDS: tuple[str, ...] = (
-    "subtotal", "sub-total", "sub total", "net amount",
+    "subtotal",
+    "sub-total",
+    "sub total",
+    "net amount",
 )
 
 TAX_KEYWORDS: tuple[str, ...] = (
-    "tax", "vat", "gst", "hst", "sales tax",
+    "tax",
+    "vat",
+    "gst",
+    "hst",
+    "sales tax",
     "الضريبة",  # Arabic: al-dariba (the tax)
 )
 
 DISCOUNT_KEYWORDS: tuple[str, ...] = (
-    "discount", "coupon", "promo", "less", "savings",
+    "discount",
+    "coupon",
+    "promo",
+    "less",
+    "savings",
     "خصم",  # Arabic: khasm (discount)
 )
 
 RECEIPT_NUMBER_KEYWORDS: tuple[str, ...] = (
-    "receipt #", "receipt no", "receipt number", "invoice #", "invoice no",
-    "invoice number", "order #", "order no", "transaction id", "trans id",
-    "ref no", "reference no",
+    "receipt #",
+    "receipt no",
+    "receipt number",
+    "invoice #",
+    "invoice no",
+    "invoice number",
+    "order #",
+    "order no",
+    "transaction id",
+    "trans id",
+    "ref no",
+    "reference no",
 )
 
 PAYMENT_METHOD_KEYWORDS: dict[str, tuple[str, ...]] = {

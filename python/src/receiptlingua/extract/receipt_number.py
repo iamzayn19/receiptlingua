@@ -21,7 +21,7 @@ def extract_receipt_number(lines: list[str]) -> ScalarField:
             pos = lowered.find(kw.lower())
             if pos == -1:
                 continue
-            remainder = text[pos + len(kw):]
+            remainder = text[pos + len(kw) :]
             m = _VALUE_RE.search(remainder)
             if m:
                 return ScalarField(

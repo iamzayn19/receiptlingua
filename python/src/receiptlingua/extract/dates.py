@@ -16,16 +16,8 @@ import re
 
 from receiptlingua.extract.types import Evidence, ScalarField
 
-_MONTH_NAMES = {
-    name.lower(): i
-    for i, name in enumerate(calendar.month_name)
-    if name
-}
-_MONTH_ABBR = {
-    name.lower(): i
-    for i, name in enumerate(calendar.month_abbr)
-    if name
-}
+_MONTH_NAMES = {name.lower(): i for i, name in enumerate(calendar.month_name) if name}
+_MONTH_ABBR = {name.lower(): i for i, name in enumerate(calendar.month_abbr) if name}
 
 _ISO_DATE_RE = re.compile(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b")
 _NUMERIC_DATE_RE = re.compile(r"\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})\b")
@@ -88,15 +80,23 @@ def extract_date(lines: list[str]) -> ScalarField:
         m = _NUMERIC_DATE_RE.search(text)
         if m:
             a, b, y = int(m.group(1)), int(m.group(2)), _normalize_year(int(m.group(3)))
-            a_could_be_month = a <= 12
-            b_could_be_month = b <= 12
             day_month_valid = _valid_date(y, b, a)  # DD/MM/YYYY
             month_day_valid = _valid_date(y, a, b)  # MM/DD/YYYY
 
             if day_month_valid and not month_day_valid:
-                return ScalarField(status="ok", value=f"{y:04d}-{b:02d}-{a:02d}", confidence=0.85, evidence=Evidence(text_line_indices=(idx,)))
+                return ScalarField(
+                    status="ok",
+                    value=f"{y:04d}-{b:02d}-{a:02d}",
+                    confidence=0.85,
+                    evidence=Evidence(text_line_indices=(idx,)),
+                )
             if month_day_valid and not day_month_valid:
-                return ScalarField(status="ok", value=f"{y:04d}-{a:02d}-{b:02d}", confidence=0.85, evidence=Evidence(text_line_indices=(idx,)))
+                return ScalarField(
+                    status="ok",
+                    value=f"{y:04d}-{a:02d}-{b:02d}",
+                    confidence=0.85,
+                    evidence=Evidence(text_line_indices=(idx,)),
+                )
             if day_month_valid and month_day_valid and a != b:
                 # Both orders are calendar-valid and produce different
                 # dates -- genuinely ambiguous without a locale signal.
@@ -108,7 +108,12 @@ def extract_date(lines: list[str]) -> ScalarField:
                 )
             if day_month_valid and month_day_valid:
                 # a == b: identical either way.
-                return ScalarField(status="ok", value=f"{y:04d}-{a:02d}-{b:02d}", confidence=0.85, evidence=Evidence(text_line_indices=(idx,)))
+                return ScalarField(
+                    status="ok",
+                    value=f"{y:04d}-{a:02d}-{b:02d}",
+                    confidence=0.85,
+                    evidence=Evidence(text_line_indices=(idx,)),
+                )
             continue
 
     return ScalarField.missing()
