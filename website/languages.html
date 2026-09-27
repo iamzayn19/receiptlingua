@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ReceiptLingua — Languages</title>
+<meta name="description" content="Language support matrix for ReceiptLingua." />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html">ReceiptLingua</a>
+  <nav class="site-nav">
+    <a href="index.html">Home</a>
+    <a href="languages.html" class="active">Languages</a>
+    <a href="benchmarks.html">Benchmarks</a>
+    <a href="docs.html">Docs</a>
+    <a href="support.html">Support</a>
+  </nav>
+</header>
+<main>
+  <h1>Language support matrix</h1>
+  <p class="tagline">
+    Rendered live from the same
+    <code>language_matrix.json</code> the Python package ships and
+    <code>LANGUAGES.md</code> is generated from — this page fetches a copy
+    of that file client-side rather than re-typing the data, so it can't
+    silently drift into a rosier hand-written table.
+  </p>
+
+  <div class="status-banner">
+    Two separate, deliberately-not-conflated columns:
+    <strong>Model-supported</strong> means the backend stack can technically
+    produce output for this language (a py3langid label <em>and</em> a
+    documented Tesseract <code>tessdata_fast</code> pack). <strong>Receipt-verified</strong>
+    means there is real benchmark evidence it works well specifically on
+    receipts. As of this writing, receipt-verified is <code>false</code> for
+    every language — no receipt benchmark covers per-language accuracy yet
+    beyond the 5 languages in <a href="benchmarks.html">Benchmarks</a>.
+  </div>
+
+  <div class="filter-row">
+    <input type="search" id="search" placeholder="Filter by name or code…" />
+    <select id="filter-supported">
+      <option value="">All languages</option>
+      <option value="true">Model-supported only</option>
+      <option value="false">Not yet model-supported</option>
+    </select>
+    <select id="filter-mandatory">
+      <option value="">All priority levels</option>
+      <option value="true">Mandatory only</option>
+    </select>
+  </div>
+
+  <p id="summary" class="muted"></p>
+
+  <table id="lang-table">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Language</th>
+        <th>Script</th>
+        <th>RTL</th>
+        <th>Model-supported</th>
+        <th>Receipt-verified</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody id="lang-body">
+      <tr><td colspan="7" class="muted">Loading language_matrix.json…</td></tr>
+    </tbody>
+  </table>
+
+  <p class="muted">
+    Full field-by-field explanation of these columns lives in
+    <a href="https://github.com/iamzayn19/receiptlingua/blob/main/LANGUAGES.md">LANGUAGES.md</a>.
+  </p>
+</main>
+<footer>
+  <p>
+    ReceiptLingua is open source (Apache-2.0).
+    <a href="https://github.com/iamzayn19/receiptlingua">Source on GitHub</a>.
+    No analytics or trackers on this site.
+  </p>
+</footer>
+<script>
+(function () {
+  var body = document.getElementById("lang-body");
+  var summary = document.getElementById("summary");
+  var searchEl = document.getElementById("search");
+  var supportedEl = document.getElementById("filter-supported");
+  var mandatoryEl = document.getElementById("filter-mandatory");
+  var data = [];
+
+  function pill(value) {
+    if (value === true) return '<span class="pill pill-ok">yes</span>';
+    return '<span class="pill pill-warn">no</span>';
+  }
+
+  function render() {
+    var q = searchEl.value.trim().toLowerCase();
+    var supported = supportedEl.value;
+    var mandatory = mandatoryEl.value;
+
+    var rows = data.filter(function (row) {
+      if (q && !(row.name.toLowerCase().indexOf(q) !== -1 || row.code.toLowerCase().indexOf(q) !== -1)) {
+        return false;
+      }
+      if (supported && String(row.model_supported) !== supported) return false;
+      if (mandatory && !row.mandatory) return false;
+      return true;
+    });
+
+    if (rows.length === 0) {
+      body.innerHTML = '<tr><td colspan="7" class="muted">No languages match this filter.</td></tr>';
+    } else {
+      body.innerHTML = rows.map(function (row) {
+        return "<tr>" +
+          "<td><code>" + row.code + "</code></td>" +
+          "<td>" + row.name + (row.mandatory ? ' <span class="pill pill-ok">mandatory</span>' : "") + "</td>" +
+          "<td>" + row.script + "</td>" +
+          "<td>" + (row.rtl ? "RTL" : "LTR") + "</td>" +
+          "<td>" + pill(row.model_supported) + "</td>" +
+          "<td>" + pill(row.receipt_verified) + "</td>" +
+          "<td class=\"muted\">" + (row.notes || "") + "</td>" +
+          "</tr>";
+      }).join("");
+    }
+
+    var supportedCount = data.filter(function (r) { return r.model_supported; }).length;
+    var verifiedCount = data.filter(function (r) { return r.receipt_verified; }).length;
+    summary.textContent = rows.length + " of " + data.length + " tracked languages shown — " +
+      supportedCount + "/" + data.length + " model-supported, " +
+      verifiedCount + "/" + data.length + " receipt-verified.";
+  }
+
+  fetch("assets/language_matrix.json")
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      data = Array.isArray(json) ? json : [];
+      render();
+    })
+    .catch(function (err) {
+      body.innerHTML = '<tr><td colspan="7" class="muted">Could not load language_matrix.json (' + err + '). See LANGUAGES.md on GitHub instead.</td></tr>';
+    });
+
+  searchEl.addEventListener("input", render);
+  supportedEl.addEventListener("change", render);
+  mandatoryEl.addEventListener("change", render);
+})();
+</script>
+</body>
+</html>
