@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.1.0",
+  "error": {
+    "code": "MODEL_DOWNLOAD_FAILED",
+    "message": "Failed to download the PP-OCRv4 multilingual recognition model: no network connection and no cached copy found in the model cache.",
+    "details": {
+      "engine": "paddleocr",
+      "model_name": "pp-ocrv4-multilingual-rec",
+      "cache_dir": "~/.cache/receiptlingua/models",
+      "offline": true
+    }
+  }
+}
