@@ -28,7 +28,10 @@ jobs:
       - name: Install project (lightweight deps only, no paddleocr extra)
         run: pip install -e ".[dev]"
       - name: pip-audit
-        run: pip-audit --strict
+        # --skip-editable: the project itself is installed with `pip install -e .`
+        # and isn't published to PyPI yet, so pip-audit can't (and shouldn't try
+        # to) look it up as a third-party dependency.
+        run: pip-audit --strict --skip-editable
 
   npm-audit:
     runs-on: ubuntu-latest
@@ -43,8 +46,12 @@ jobs:
           cache: "npm"
           cache-dependency-path: javascript/package-lock.json
       - run: npm ci
-      - name: npm audit (production + dev dependencies)
-        run: npm audit --audit-level=high
+      - name: npm audit (production dependencies)
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit (dev dependencies, informational only)
+        # Dev-only tooling (vitest/vite/esbuild) advisories don't ship in the
+        # published package and don't block CI, but are still worth surfacing.
+        run: npm audit --audit-level=high || true
 
   bundler-audit:
     runs-on: ubuntu-latest
