@@ -4,11 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "receiptlingua"
-version = "0.1.0"
+version = "0.1.0.dev0"
 description = "Offline-first, multilingual receipt OCR (Python ML implementation)"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [{ name = "ReceiptLingua contributors" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+  "Topic :: Text Processing :: Linguistic",
+]
 dependencies = [
   "numpy>=1.26",
   "pillow>=10.0",
@@ -30,10 +37,25 @@ paddleocr = [
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
+  "jsonschema>=4.20",
 ]
+
+[project.scripts]
+receiptlingua = "receiptlingua.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/iamzayn19/receiptlingua"
+Repository = "https://github.com/iamzayn19/receiptlingua"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+# language_matrix.json (loaded at runtime by receiptlingua.langid.matrix)
+# is data, not code -- setuptools does not include it in the built
+# wheel/sdist by default, which broke `receiptlingua languages` on a real
+# `pip install` (worked only in editable/dev mode by sys.path accident).
+receiptlingua = ["langid/data/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
