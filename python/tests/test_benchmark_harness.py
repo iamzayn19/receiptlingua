@@ -13,10 +13,17 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
+from receiptlingua.synth.generator import SUPPORTED_LANGUAGES
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "benchmarks"))
 
 from run_benchmark import aggregate, run_case  # noqa: E402
+
+if "en" not in SUPPORTED_LANGUAGES:
+    pytest.skip("no usable font found for 'en' on this machine", allow_module_level=True)
 
 
 def test_run_case_produces_expected_shape(tmp_path):

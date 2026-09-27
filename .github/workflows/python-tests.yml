@@ -46,9 +46,11 @@ jobs:
           cache: "pip"
           cache-dependency-path: python/pyproject.toml
 
-      - name: Install Tesseract (English only, matches lightweight fast-CI scope)
+      - name: Install Tesseract + fonts (English-only OCR, DejaVu/Noto for synth fixtures)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y tesseract-ocr
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr fonts-dejavu-core fonts-noto-core fonts-noto-extra
 
       - name: Install Tesseract (English only, matches lightweight fast-CI scope)
         if: runner.os == 'macOS'

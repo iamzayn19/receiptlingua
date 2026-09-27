@@ -31,19 +31,29 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 from PIL import Image, ImageDraw, ImageFont
 
-# Real system fonts, verified (by hand, see docs/COMMIT_PLAN.md 171-185
-# notes) to load via PIL.ImageFont.truetype and render non-empty glyphs
-# for each script on this checkout's macOS install. Reused/extended from
-# the same font choices already proven to work in
-# python/tests/fixtures/generate.py's OCR smoke fixtures.
-FONTS: dict[str, dict[str, str]] = {
+# Candidate font paths per language: macOS system fonts (verified by hand,
+# see docs/COMMIT_PLAN.md 171-185 notes, to load and render non-empty glyphs
+# for each script), plus the equivalent open, permissively-licensed fonts on
+# a typical Linux box (DejaVu Sans for Latin; Noto Sans's per-script variants
+# for the rest -- installed in CI via `apt-get install fonts-dejavu-core
+# fonts-noto-core fonts-noto-extra`, see .github/workflows/python-tests.yml).
+# The first candidate that actually exists on THIS machine is used; a
+# language with no existing candidate is simply not supported here (see
+# SUPPORTED_LANGUAGES below) rather than fabricating support.
+_FONT_CANDIDATES: dict[str, dict[str, Any]] = {
     "en": {
-        "font": "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ],
         "script": "Latn",
         "rtl": "false",
     },
     "ta": {
-        "font": "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansTamil-Regular.ttf",
+        ],
         "script": "Taml",
         "rtl": "false",
     },
@@ -58,28 +68,55 @@ FONTS: dict[str, dict[str, str]] = {
     # Unicode.ttf was verified (same bbox-probing method) to have distinct,
     # correct glyphs for Latin digits/punctuation *and* Arabic/Hebrew
     # letterforms (including the presentation-forms glyphs
-    # ``arabic_reshaper`` output needs), so it is used for both.
+    # ``arabic_reshaper`` output needs), so it is used for both. Noto Sans
+    # Arabic (a distinct font on Linux) has not been separately bbox-probed
+    # for the same digit issue; if it turns out to have it too, that's a
+    # follow-up, not assumed fixed here.
     "ar": {
-        "font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
+        ],
         "script": "Arab",
         "rtl": "true",
     },
     "hi": {
-        "font": "/System/Library/Fonts/Supplemental/Devanagari Sangam MN.ttc",
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Devanagari Sangam MN.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+        ],
         "script": "Deva",
         "rtl": "false",
     },
     "he": {
-        "font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansHebrew-Regular.ttf",
+        ],
         "script": "Hebr",
         "rtl": "true",
     },
 }
 
-#: Languages this generator can actually render right now. Do not add a
-#: language here without first confirming a real font renders it (see
-#: FONTS above) -- claiming script support without a working font is
-#: exactly the kind of fabricated capability this project forbids.
+
+def _resolve_font(lang: str) -> str | None:
+    for path in _FONT_CANDIDATES[lang]["candidates"]:
+        if Path(path).exists():
+            return path
+    return None
+
+
+#: Languages this generator can actually render right now, restricted to
+#: those with at least one existing font candidate on THIS machine --
+#: claiming script support without a real, loadable font on the running
+#: machine is exactly the kind of fabricated capability this project
+#: forbids.
+FONTS: dict[str, dict[str, str]] = {
+    lang: {"font": font, "script": info["script"], "rtl": info["rtl"]}
+    for lang, info in _FONT_CANDIDATES.items()
+    if (font := _resolve_font(lang)) is not None
+}
+
 SUPPORTED_LANGUAGES: tuple[str, ...] = tuple(FONTS.keys())
 
 _CURRENCY_BY_LANG = {"en": "USD", "ta": "INR", "hi": "INR", "ar": "AED", "he": "ILS"}

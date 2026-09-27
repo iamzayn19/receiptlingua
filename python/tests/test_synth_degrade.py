@@ -6,11 +6,13 @@ import pytest
 from PIL import Image
 
 from receiptlingua.synth.degrade import DEFERRED_DEGRADATIONS, DEGRADATIONS
-from receiptlingua.synth.generator import generate_receipt
+from receiptlingua.synth.generator import SUPPORTED_LANGUAGES, generate_receipt
 
 
 @pytest.fixture(scope="module")
 def base_image():
+    if "en" not in SUPPORTED_LANGUAGES:
+        pytest.skip("no usable font found for 'en' on this machine")
     return generate_receipt("en", seed=99).image
 
 
