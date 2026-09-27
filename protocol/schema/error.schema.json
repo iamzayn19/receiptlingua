@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://receiptlingua.dev/protocol/schema/error.schema.json",
+  "title": "ReceiptLingua Error Response",
+  "description": "Envelope returned by the sidecar when a request fails.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "error"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Semantic version of this protocol schema, e.g. \"0.1.0\".",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Stable machine-readable error code. Clients should switch on this, not on `message`.",
+          "enum": [
+            "INVALID_IMAGE",
+            "UNSUPPORTED_FORMAT",
+            "MODEL_NOT_FOUND",
+            "MODEL_DOWNLOAD_FAILED",
+            "OCR_FAILED",
+            "OUT_OF_MEMORY",
+            "UNSUPPORTED_BACKEND",
+            "INVALID_CONFIGURATION"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable explanation. May change between versions; not for programmatic matching.",
+          "minLength": 1
+        },
+        "details": {
+          "type": "object",
+          "description": "Optional structured context specific to the error code (e.g. the offending config key, the missing model name). Shape varies by code and is not further constrained here."
+        }
+      }
+    }
+  }
+}
