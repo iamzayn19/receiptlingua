@@ -50,6 +50,13 @@ OCR logic in one place while giving each ecosystem an idiomatic native API.
 The protocol is designed so the sidecar can later be replaced by a native
 runtime without breaking the public JS/Ruby APIs.
 
+The sidecar transport itself (stdio vs. a local socket, plus framing) was an
+open item for a while; it's now decided -- newline-delimited JSON over
+stdin/stdout -- see `docs/adr/0003-sidecar-transport.md`. The Python
+`PaddleOCREngine` uses this to run a **persistent** sidecar daemon that
+loads its model once and serves many `recognize()` calls, rather than the
+earlier one-process-per-call stopgap.
+
 ## Engine abstraction
 
 `python/receiptlingua/engines/` defines a common `OCREngine` interface with

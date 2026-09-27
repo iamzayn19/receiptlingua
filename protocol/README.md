@@ -36,23 +36,17 @@ This milestone is schema-only. It defines the request/response *shape* and
 the vocabulary (status enums, error codes, script/language tagging) that
 every client will need to agree on. It does **not** implement:
 
-- The actual sidecar process or its transport (stdio vs. a local Unix
-  socket vs. something else — this is intentionally left open, see
-  "Open questions" below and the future ADR it points to).
-- Request framing (how one JSON message is delimited from the next on the
-  wire).
+- The actual sidecar process itself (this schema only defines the JSON
+  shapes it exchanges).
 - Any client-side (de)serialization code in `python/`, `javascript/`, or
   `ruby/` — those are later milestones.
 
-## Open questions (not decided here)
+## Transport (decided)
 
-- **Transport mechanism**: stdio (newline-delimited JSON over the sidecar's
-  stdin/stdout) vs. a local Unix domain socket (or named pipe on Windows).
-  Both are viable; the choice affects process lifecycle management, error
-  recovery, and Windows support, and deserves its own ADR before the
-  sidecar is implemented (see ADR 0003 referenced in the feasibility note).
-- **Message framing**: length-prefixed frames vs. newline-delimited JSON
-  vs. some other framing — depends on the transport choice above.
-
-Both are called out explicitly so they aren't accidentally decided by
-whatever the first implementation happens to do.
+The open transport/framing question this section used to flag has been
+resolved: **newline-delimited JSON over the sidecar's stdin/stdout**, no
+Unix domain socket, no length-prefixed framing. See
+`docs/adr/0003-sidecar-transport.md` for the full rationale and the
+concrete wire format. It's implemented for the PaddleOCR sidecar in
+`python/src/receiptlingua/engines/_paddle_sidecar_daemon.py` /
+`paddleocr_engine.py`.
