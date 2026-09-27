@@ -81,12 +81,12 @@ def make_perspective_receipt() -> Image.Image:
 
 def _perspective_coeffs(src, dst):
     matrix = []
-    for s, d in zip(dst, src):
+    for s, d in zip(dst, src, strict=True):
         matrix.append([s[0], s[1], 1, 0, 0, 0, -d[0] * s[0], -d[0] * s[1]])
         matrix.append([0, 0, 0, s[0], s[1], 1, -d[1] * s[0], -d[1] * s[1]])
     A = np.array(matrix, dtype=np.float64)
     B = np.array(dst, dtype=np.float64).reshape(8)
-    res = np.linalg.solve(A, B) if A.shape[0] == A.shape[1] else np.linalg.lstsq(A, B, rcond=None)[0]
+    res = np.linalg.lstsq(A, B, rcond=None)[0]
     return res.tolist()
 
 
