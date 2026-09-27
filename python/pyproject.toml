@@ -13,9 +13,18 @@ dependencies = [
   "numpy>=1.26",
   "pillow>=10.0",
   "opencv-python-headless>=4.9",
+  "pytesseract>=0.3.10",
 ]
 
 [project.optional-dependencies]
+paddleocr = [
+  # Not currently installable on Python 3.14 -- see
+  # docs/adr/0002-ocr-backend-selection.md. Listed so the extra is ready
+  # once an upstream build supports this interpreter, or so it can be
+  # installed into a separate pinned-Python sidecar venv.
+  "paddlepaddle>=2.6",
+  "paddleocr>=2.7",
+]
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
