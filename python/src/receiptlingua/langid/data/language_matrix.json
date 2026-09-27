@@ -1,0 +1,942 @@
+[
+  {
+    "code": "en",
+    "name": "English",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract langpack 'eng' installed locally. py3langid label 'en'."
+  },
+  {
+    "code": "ur",
+    "name": "Urdu",
+    "script": "Arab",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'urd' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ur'."
+  },
+  {
+    "code": "ar",
+    "name": "Arabic",
+    "script": "Arab",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'ara' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ar'."
+  },
+  {
+    "code": "hi",
+    "name": "Hindi",
+    "script": "Deva",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'hin' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'hi'."
+  },
+  {
+    "code": "ta",
+    "name": "Tamil",
+    "script": "Taml",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'tam' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ta'."
+  },
+  {
+    "code": "te",
+    "name": "Telugu",
+    "script": "Telu",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'tel' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'te'."
+  },
+  {
+    "code": "bn",
+    "name": "Bengali",
+    "script": "Beng",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'ben' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'bn'."
+  },
+  {
+    "code": "pa",
+    "name": "Punjabi",
+    "script": "Guru",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'pan' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'pa'."
+  },
+  {
+    "code": "gu",
+    "name": "Gujarati",
+    "script": "Gujr",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'guj' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'gu'."
+  },
+  {
+    "code": "kn",
+    "name": "Kannada",
+    "script": "Knda",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'kan' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'kn'."
+  },
+  {
+    "code": "ml",
+    "name": "Malayalam",
+    "script": "Mlym",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'mal' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ml'."
+  },
+  {
+    "code": "mr",
+    "name": "Marathi",
+    "script": "Deva",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'mar' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'mr'."
+  },
+  {
+    "code": "ne",
+    "name": "Nepali",
+    "script": "Deva",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'nep' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ne'."
+  },
+  {
+    "code": "fa",
+    "name": "Persian",
+    "script": "Arab",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'fas' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'fa'."
+  },
+  {
+    "code": "zh-Hans",
+    "name": "Chinese (Simplified)",
+    "script": "Hani",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'chi_sim' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'zh'. py3langid only outputs a single generic 'zh' label and does not distinguish Simplified/Traditional; script/variant must come from the OCR backend's language pack choice, not language ID."
+  },
+  {
+    "code": "zh-Hant",
+    "name": "Chinese (Traditional)",
+    "script": "Hani",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'chi_tra' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'zh'. py3langid only outputs a single generic 'zh' label and does not distinguish Simplified/Traditional; script/variant must come from the OCR backend's language pack choice, not language ID."
+  },
+  {
+    "code": "ja",
+    "name": "Japanese",
+    "script": "Jpan",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'jpn' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ja'."
+  },
+  {
+    "code": "ko",
+    "name": "Korean",
+    "script": "Hang",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'kor' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ko'."
+  },
+  {
+    "code": "th",
+    "name": "Thai",
+    "script": "Thai",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'tha' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'th'."
+  },
+  {
+    "code": "id",
+    "name": "Indonesian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'ind' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'id'."
+  },
+  {
+    "code": "ms",
+    "name": "Malay",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'msa' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ms'."
+  },
+  {
+    "code": "vi",
+    "name": "Vietnamese",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'vie' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'vi'."
+  },
+  {
+    "code": "fr",
+    "name": "French",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'fra' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'fr'."
+  },
+  {
+    "code": "de",
+    "name": "German",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'deu' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'de'."
+  },
+  {
+    "code": "es",
+    "name": "Spanish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'spa' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'es'."
+  },
+  {
+    "code": "pt",
+    "name": "Portuguese",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'por' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'pt'."
+  },
+  {
+    "code": "it",
+    "name": "Italian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'ita' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'it'."
+  },
+  {
+    "code": "nl",
+    "name": "Dutch",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'nld' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'nl'."
+  },
+  {
+    "code": "tr",
+    "name": "Turkish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'tur' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'tr'."
+  },
+  {
+    "code": "ru",
+    "name": "Russian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'rus' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ru'."
+  },
+  {
+    "code": "uk",
+    "name": "Ukrainian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'ukr' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'uk'."
+  },
+  {
+    "code": "pl",
+    "name": "Polish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": true,
+    "notes": "Tesseract tessdata_fast langpack 'pol' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'pl'."
+  },
+  {
+    "code": "af",
+    "name": "Afrikaans",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'afr' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'af'."
+  },
+  {
+    "code": "sq",
+    "name": "Albanian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'sqi' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sq'."
+  },
+  {
+    "code": "am",
+    "name": "Amharic",
+    "script": "Ethi",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'amh' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'am'."
+  },
+  {
+    "code": "hy",
+    "name": "Armenian",
+    "script": "Armn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'hye' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'hy'."
+  },
+  {
+    "code": "az",
+    "name": "Azerbaijani",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'aze' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'az'."
+  },
+  {
+    "code": "eu",
+    "name": "Basque",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'eus' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'eu'."
+  },
+  {
+    "code": "be",
+    "name": "Belarusian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'bel' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'be'."
+  },
+  {
+    "code": "bs",
+    "name": "Bosnian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'bos' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'bs'."
+  },
+  {
+    "code": "bg",
+    "name": "Bulgarian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'bul' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'bg'."
+  },
+  {
+    "code": "my",
+    "name": "Burmese",
+    "script": "Mymr",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'mya' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'my'."
+  },
+  {
+    "code": "ca",
+    "name": "Catalan",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'cat' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ca'."
+  },
+  {
+    "code": "hr",
+    "name": "Croatian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'hrv' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'hr'."
+  },
+  {
+    "code": "cs",
+    "name": "Czech",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'ces' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'cs'."
+  },
+  {
+    "code": "da",
+    "name": "Danish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'dan' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'da'."
+  },
+  {
+    "code": "et",
+    "name": "Estonian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'est' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'et'."
+  },
+  {
+    "code": "fi",
+    "name": "Finnish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'fin' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'fi'."
+  },
+  {
+    "code": "gl",
+    "name": "Galician",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'glg' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'gl'."
+  },
+  {
+    "code": "ka",
+    "name": "Georgian",
+    "script": "Geor",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'kat' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ka'."
+  },
+  {
+    "code": "el",
+    "name": "Greek",
+    "script": "Grek",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'ell' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'el'."
+  },
+  {
+    "code": "he",
+    "name": "Hebrew",
+    "script": "Hebr",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'heb' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'he'."
+  },
+  {
+    "code": "hu",
+    "name": "Hungarian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'hun' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'hu'."
+  },
+  {
+    "code": "is",
+    "name": "Icelandic",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'isl' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'is'."
+  },
+  {
+    "code": "ga",
+    "name": "Irish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'gle' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ga'."
+  },
+  {
+    "code": "jv",
+    "name": "Javanese",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'jav' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'jv'."
+  },
+  {
+    "code": "kk",
+    "name": "Kazakh",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'kaz' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'kk'."
+  },
+  {
+    "code": "km",
+    "name": "Khmer",
+    "script": "Khmr",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'khm' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'km'."
+  },
+  {
+    "code": "ky",
+    "name": "Kyrgyz",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'kir' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ky'."
+  },
+  {
+    "code": "lo",
+    "name": "Lao",
+    "script": "Laoo",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'lao' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'lo'."
+  },
+  {
+    "code": "lv",
+    "name": "Latvian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'lav' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'lv'."
+  },
+  {
+    "code": "lt",
+    "name": "Lithuanian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'lit' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'lt'."
+  },
+  {
+    "code": "mk",
+    "name": "Macedonian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'mkd' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'mk'."
+  },
+  {
+    "code": "mt",
+    "name": "Maltese",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'mlt' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'mt'."
+  },
+  {
+    "code": "mn",
+    "name": "Mongolian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'mon' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'mn'."
+  },
+  {
+    "code": "no",
+    "name": "Norwegian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'nor' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'no'."
+  },
+  {
+    "code": "or",
+    "name": "Odia",
+    "script": "Orya",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'ori' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'or'."
+  },
+  {
+    "code": "ps",
+    "name": "Pashto",
+    "script": "Arab",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'pus' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ps'."
+  },
+  {
+    "code": "ro",
+    "name": "Romanian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'ron' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ro'."
+  },
+  {
+    "code": "sa",
+    "name": "Sanskrit",
+    "script": "Deva",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'san' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sa'."
+  },
+  {
+    "code": "sr",
+    "name": "Serbian",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'srp' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sr'."
+  },
+  {
+    "code": "si",
+    "name": "Sinhala",
+    "script": "Sinh",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'sin' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'si'."
+  },
+  {
+    "code": "sk",
+    "name": "Slovak",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'slk' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sk'."
+  },
+  {
+    "code": "sl",
+    "name": "Slovenian",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'slv' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sl'."
+  },
+  {
+    "code": "sw",
+    "name": "Swahili",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'swa' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sw'."
+  },
+  {
+    "code": "sv",
+    "name": "Swedish",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'swe' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'sv'."
+  },
+  {
+    "code": "tl",
+    "name": "Tagalog",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'tgl' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'tl'."
+  },
+  {
+    "code": "tg",
+    "name": "Tajik",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'tgk' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'tg'."
+  },
+  {
+    "code": "tt",
+    "name": "Tatar",
+    "script": "Cyrl",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'tat' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'tt'."
+  },
+  {
+    "code": "ug",
+    "name": "Uyghur",
+    "script": "Arab",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'uig' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ug'."
+  },
+  {
+    "code": "uz",
+    "name": "Uzbek",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'uzb' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'uz'."
+  },
+  {
+    "code": "cy",
+    "name": "Welsh",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'cym' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'cy'."
+  },
+  {
+    "code": "yo",
+    "name": "Yoruba",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'yor' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'yo'."
+  },
+  {
+    "code": "zu",
+    "name": "Zulu",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'zul' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'zu'."
+  },
+  {
+    "code": "as",
+    "name": "Assamese",
+    "script": "Beng",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'asm' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'as'."
+  },
+  {
+    "code": "qu",
+    "name": "Quechua",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'que' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'qu'."
+  },
+  {
+    "code": "ht",
+    "name": "Haitian Creole",
+    "script": "Latn",
+    "model_supported": true,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'hat' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). py3langid label 'ht'."
+  },
+  {
+    "code": "bo",
+    "name": "Tibetan",
+    "script": "Tibt",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'bod' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). Not a label in py3langid's bundled model (language ID unavailable)."
+  },
+  {
+    "code": "dv",
+    "name": "Dhivehi",
+    "script": "Thaa",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'div' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). Not a label in py3langid's bundled model (language ID unavailable)."
+  },
+  {
+    "code": "ti",
+    "name": "Tigrinya",
+    "script": "Ethi",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'tir' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). Not a label in py3langid's bundled model (language ID unavailable)."
+  },
+  {
+    "code": "to",
+    "name": "Tongan",
+    "script": "Latn",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'ton' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). Not a label in py3langid's bundled model (language ID unavailable)."
+  },
+  {
+    "code": "chr",
+    "name": "Cherokee",
+    "script": "Cher",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'chr' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). Not a label in py3langid's bundled model (language ID unavailable)."
+  },
+  {
+    "code": "iu",
+    "name": "Inuktitut",
+    "script": "Cans",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": false,
+    "mandatory": false,
+    "notes": "Tesseract tessdata_fast langpack 'iku' documented upstream but not installed in this checkout (only 'eng' is present; fetch via `brew install tesseract-lang` or manual tessdata download). Not a label in py3langid's bundled model (language ID unavailable)."
+  },
+  {
+    "code": "ku",
+    "name": "Kurdish",
+    "script": "Arab",
+    "model_supported": false,
+    "receipt_verified": false,
+    "rtl": true,
+    "mandatory": false,
+    "notes": "No known Tesseract tessdata_fast langpack for this language. py3langid label 'ku'."
+  }
+]
