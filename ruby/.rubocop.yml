@@ -1,0 +1,57 @@
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.0
+  SuggestExtensions: false
+  Exclude:
+    - "vendor/**/*"
+    - "pkg/**/*"
+
+Style/Documentation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Max: 25
+
+Metrics/AbcSize:
+  Max: 35
+
+Metrics/ClassLength:
+  Max: 200
+
+RSpec/ExampleLength:
+  Max: 30
+
+RSpec/MultipleExpectations:
+  Max: 12
+
+RSpec/NestedGroups:
+  Max: 4
+
+# The following spec-organization cops don't earn their keep for this
+# gem's small, mostly-integration-style spec suite:
+RSpec/DescribeClass:
+  Enabled: false # integration spec describes a behavior, not a single class
+RSpec/InstanceVariable:
+  Enabled: false # before(:context) + ivar is the natural way to share a probed CLI path
+RSpec/BeforeAfterAll:
+  Enabled: false # probing for the CLI once per file is intentional, not a fixture leak
+RSpec/LeakyConstantDeclaration:
+  Enabled: false # small fixture-path constants scoped to one spec file
+RSpec/ExpectActual:
+  Enabled: false # `expect(%w[...]).to include(result.mode)` reads fine here
+RSpec/SpecFilePathFormat:
+  Enabled: false # cop mis-derives "receipt_lingua" from the ReceiptLingua module name
+Lint/ConstantDefinitionInBlock:
+  Enabled: false # RSpec.describe blocks are the idiomatic place for spec-local constants
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false # keeping dev deps in the gemspec (not a separate Gemfile block) is fine here
