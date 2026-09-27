@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ReceiptLingua — Support</title>
+<meta name="description" content="How to get support, acknowledgements, and the ReceiptLingua funding status." />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html">ReceiptLingua</a>
+  <nav class="site-nav">
+    <a href="index.html">Home</a>
+    <a href="languages.html">Languages</a>
+    <a href="benchmarks.html">Benchmarks</a>
+    <a href="docs.html">Docs</a>
+    <a href="support.html" class="active">Support</a>
+  </nav>
+</header>
+<main>
+  <h1>Support</h1>
+
+  <h2>Getting help</h2>
+  <ul>
+    <li><strong>Bugs / feature requests</strong>: open a
+      <a href="https://github.com/iamzayn19/receiptlingua/issues">GitHub issue</a>.</li>
+    <li><strong>Usage questions</strong>: a GitHub Discussion (once enabled)
+      or an issue tagged <code>question</code>.</li>
+    <li><strong>Security issues</strong>: see
+      <a href="https://github.com/iamzayn19/receiptlingua/blob/main/SECURITY.md">SECURITY.md</a>
+      — please do not use public issues for these.</li>
+  </ul>
+  <p class="muted">
+    This is a community-maintained open-source project with no paid
+    support tier. Response times are best-effort.
+  </p>
+
+  <h2>Donations / financial support</h2>
+  <div class="todo-box">
+    <strong>Not set up yet — deliberately.</strong> No GitHub Sponsors,
+    Ko-fi, Open Collective, or Patreon account has actually been created
+    for this project. Rather than invent a placeholder account name here
+    (which risks pointing real money at nothing, or at the wrong
+    account), this section stays an honest TODO until the project owner
+    sets one up. See
+    <a href="https://github.com/iamzayn19/receiptlingua/blob/main/.github/FUNDING.yml">.github/FUNDING.yml</a>
+    for the same TODO, commented out, at the repo level.
+  </div>
+
+  <h2>Acknowledgements</h2>
+  <p>ReceiptLingua is built on top of, and grateful to, a number of open-source projects:</p>
+  <ul>
+    <li><a href="https://github.com/tesseract-ocr/tesseract">Tesseract OCR</a> and the
+      <a href="https://github.com/tesseract-ocr/tessdata_fast">tessdata_fast</a> language packs.</li>
+    <li><a href="https://github.com/PaddlePaddle/PaddleOCR">PaddleOCR</a>, an optional backend.</li>
+    <li><a href="https://pypi.org/project/py3langid/">py3langid</a> for offline language identification.</li>
+    <li>The <code>regex</code> package's Unicode script-property matching, used for script segmentation.</li>
+    <li><a href="https://github.com/mpcabd/python-arabic-reshaper">arabic-reshaper</a> and
+      <a href="https://github.com/MeirKriheli/python-bidi">python-bidi</a> for Arabic/Hebrew shaping and bidi reordering.</li>
+    <li>NumPy, Pillow, and OpenCV for image processing.</li>
+  </ul>
+  <p class="muted">
+    Full license text for each dependency is tracked per-ecosystem
+    (<code>python/pyproject.toml</code>, <code>javascript/package.json</code>,
+    <code>ruby/receiptlingua.gemspec</code>) and in generated SBOMs
+    (see <code>python/scripts/generate_sbom.py</code>).
+  </p>
+</main>
+<footer>
+  <p>
+    ReceiptLingua is open source (Apache-2.0).
+    <a href="https://github.com/iamzayn19/receiptlingua">Source on GitHub</a>.
+    No analytics or trackers on this site.
+  </p>
+</footer>
+</body>
+</html>
