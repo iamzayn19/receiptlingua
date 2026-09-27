@@ -46,3 +46,8 @@ benchmarks/results/
 .env.*
 credentials.json
 .venv-paddle/
+
+# Generated SBOM (release-time artifact, regenerated per release via
+# python/scripts/generate_sbom.py; not checked in since it's a snapshot
+# of whatever is installed at generation time)
+python/sbom.json
