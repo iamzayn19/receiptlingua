@@ -86,3 +86,35 @@ text lines, structured fields, error schema, versioning, script, and one
 commit per fixture). Transport mechanism (stdio vs. Unix socket) remains
 an open question for a future ADR before milestone 31+ needs it directly,
 and is not blocking — the sidecar isn't implemented yet.
+
+31-55 (preprocessing) done as of 2026-09-27, in ~12 commits rather than the
+~25 implied by the range (each stage plus its tests landed as one atomic
+commit, and fixture generation/plan scaffolding were grouped rather than
+split further). This is also the first code under `python/`, so minimal
+packaging scaffolding was added alongside it (not the full 121-140
+packaging/CLI milestone): `python/pyproject.toml`, a `src/receiptlingua`
+layout, ruff+pytest config. Dependencies chosen: numpy, pillow, and
+opencv-python-headless (all BSD/permissive-licensed, verified installable
+in this environment on Python 3.14). `uv` was checked again and is still
+not installed, so plain `venv`+`pip` was used.
+
+Implemented under `python/receiptlingua/pipeline/preprocess/`: image
+loading/validation (decompression-bomb and malformed-file guards), EXIF
+orientation normalization, deskew, a v0 heuristic perspective/document-
+boundary correction (documented as a simplified approach, not a trained
+model), grayscale normalization, CLAHE, adaptive thresholding, fast/
+accurate denoising, unsharp-mask sharpening, gamma/illumination
+correction, an image-quality heuristic scorer (blur/contrast/brightness),
+and a pipeline orchestrator that gates accurate-mode stages on the
+quality score instead of always running every technique. 74 tests pass
+against synthetic fixtures generated in-repo (no downloaded photos),
+including corrupt/zero-byte/non-image/decompression-bomb edge cases.
+
+Deviation: adaptive thresholding and denoise/sharpen are implemented as
+standalone, independently testable modules but are not both wired into
+the orchestrator's default candidate (thresholding is left for the OCR
+engine layer to invoke per-backend, since some OCR backends prefer
+grayscale input over a hard binary mask). Open question for a future ADR:
+whether the v0 perspective-correction heuristic needs to be replaced by a
+trained document-boundary model once real-world (non-synthetic) receipt
+photos are available to benchmark against.
