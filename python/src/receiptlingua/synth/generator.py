@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import arabic_reshaper
+from bidi.algorithm import get_display
 from PIL import Image, ImageDraw, ImageFont
 
 # Real system fonts, verified (by hand, see docs/COMMIT_PLAN.md 171-185
@@ -37,13 +39,25 @@ from PIL import Image, ImageDraw, ImageFont
 FONTS: dict[str, dict[str, str]] = {
     "en": {"font": "/System/Library/Fonts/Supplemental/Arial.ttf", "script": "Latn", "rtl": "false"},
     "ta": {"font": "/System/Library/Fonts/Supplemental/Tamil MN.ttc", "script": "Taml", "rtl": "false"},
-    "ar": {"font": "/System/Library/Fonts/SFArabic.ttf", "script": "Arab", "rtl": "true"},
+    # NOTE: SFArabic.ttf/SFHebrew.ttf (Apple's native Arabic/Hebrew system
+    # fonts) were tried first and do render their own scripts correctly,
+    # but were verified (via PIL ImageFont.getmask bbox probing -- see
+    # docs/COMMIT_PLAN.md RTL-fix notes) to have NO usable Latin digit/
+    # ASCII glyphs: every ASCII codepoint ('0'-'9', 'x', 'A'...) came back
+    # with the exact same bounding box, the signature of FreeType's
+    # ".notdef" fallback glyph -- i.e. every price, date, and quantity on
+    # ar/he receipts was silently rendered as a black tofu box. Arial
+    # Unicode.ttf was verified (same bbox-probing method) to have distinct,
+    # correct glyphs for Latin digits/punctuation *and* Arabic/Hebrew
+    # letterforms (including the presentation-forms glyphs
+    # ``arabic_reshaper`` output needs), so it is used for both.
+    "ar": {"font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", "script": "Arab", "rtl": "true"},
     "hi": {
         "font": "/System/Library/Fonts/Supplemental/Devanagari Sangam MN.ttc",
         "script": "Deva",
         "rtl": "false",
     },
-    "he": {"font": "/System/Library/Fonts/SFHebrew.ttf", "script": "Hebr", "rtl": "true"},
+    "he": {"font": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", "script": "Hebr", "rtl": "true"},
 }
 
 #: Languages this generator can actually render right now. Do not add a
@@ -168,6 +182,31 @@ def _fmt_amount(value: float) -> str:
     return f"{value:.2f}"
 
 
+def _visual_render_line(line: str, *, rtl: bool) -> str:
+    """Convert a logical-order Unicode string into the visual-order glyph
+    sequence PIL's ``ImageDraw.text`` needs to render it correctly.
+
+    PIL/FreeType draws glyphs left-to-right in the order given -- it does
+    not apply the Unicode Bidirectional Algorithm or Arabic contextual
+    letter shaping (initial/medial/final/isolated joining forms). Drawing
+    a raw logical-order Arabic/Hebrew string therefore produces visually
+    wrong output (disconnected Arabic letters, reversed word order) even
+    though the *ground truth string itself* is perfectly correct Unicode --
+    the bug is purely in what gets handed to ``draw.text``, not in the
+    ground truth. This function is only ever used for the image-rendering
+    path; ``GroundTruth.lines``/``full_text`` always keep the original
+    logical-order string, matching what Tesseract's own RTL-aware ``ara``/
+    ``heb`` models are trained to output.
+    """
+    if not rtl:
+        return line
+    # Arabic needs contextual letter shaping (joining) before bidi
+    # reordering; Hebrew letters are not joined, so reshaping is a no-op
+    # for it and only bidi reordering applies.
+    reshaped = arabic_reshaper.reshape(line)
+    return get_display(reshaped)
+
+
 def generate_receipt(
     language: str,
     seed: int,
@@ -226,9 +265,10 @@ def generate_receipt(
     img = Image.new("RGB", (width, int(height)), "white")
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_info["font"], font_size)
+    is_rtl = font_info["rtl"] == "true"
     y = 20
     for line in lines:
-        draw.text((18, y), line, fill="black", font=font)
+        draw.text((18, y), _visual_render_line(line, rtl=is_rtl), fill="black", font=font)
         y += int(font_size * 1.6)
 
     gt = GroundTruth(

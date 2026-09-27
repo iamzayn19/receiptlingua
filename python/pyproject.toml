@@ -23,6 +23,8 @@ dependencies = [
   "pytesseract>=0.3.10",
   "regex>=2024.1.1",
   "py3langid>=0.4.0",
+  "arabic-reshaper>=3.0.0",
+  "python-bidi>=0.6.0",
 ]
 
 [project.optional-dependencies]
