@@ -90,6 +90,15 @@ def _perspective_coeffs(src, dst):
     return res.tolist()
 
 
+def make_receipt_on_background() -> Image.Image:
+    """A white receipt on a contrasting dark background, for boundary detection tests."""
+    bg_w, bg_h = 160, 220
+    background = Image.new("RGB", (bg_w, bg_h), (40, 40, 40))
+    receipt = make_clean_receipt().resize((110, 170))
+    background.paste(receipt, (25, 25))
+    return background
+
+
 def write_truncated_fixture(path: Path, source: Path, keep_bytes: int) -> None:
     data = source.read_bytes()
     path.write_bytes(data[:keep_bytes])
@@ -135,6 +144,7 @@ def main() -> None:
     make_dark_receipt().save(FIXTURES_DIR / "receipt_dark.png")
     make_noisy_receipt().save(FIXTURES_DIR / "receipt_noisy.png")
     make_perspective_receipt().save(FIXTURES_DIR / "receipt_perspective.png")
+    make_receipt_on_background().save(FIXTURES_DIR / "receipt_on_background.png")
 
     write_truncated_fixture(
         FIXTURES_DIR / "corrupt_truncated.png",
