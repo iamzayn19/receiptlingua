@@ -134,26 +134,31 @@ built on the existing image-quality heuristic scorer (`mode.py`); an
 engine registry/factory preferring PaddleOCR then falling back to
 Tesseract (`registry.py`); a real, working `TesseractEngine` adapter
 using `pytesseract`, with PSM 6 tuned for receipt-shaped images
-(`tesseract_engine.py`); and a `PaddleOCREngine` adapter stub with the
-intended integration shape, whose `recognize()` raises
-`UnsupportedBackendError` immediately in this environment
-(`paddleocr_engine.py`).
+(`tesseract_engine.py`); and a real, working `PaddleOCREngine` adapter
+(`paddleocr_engine.py`) -- see below.
 
-Real, honest deviation from the original milestone list: **PaddleOCR
-could not be validated in this environment.** `paddlepaddle` has no
-distributable wheel for Python 3.14 (this repo's system Python) on
-macOS arm64 -- confirmed by direct wheel-availability checks showing
-`paddlepaddle==3.3.1` ships wheels through CPython 3.13 but not 3.14. It
-was not force-installed or faked; see
-`docs/adr/0002-ocr-backend-selection.md` for the exact failure output,
-the version-by-version wheel check, and the recommended follow-up (run
-PaddleOCR in a separate sidecar venv pinned to Python 3.11-3.13). This
-means **the "109 languages" goal is not yet backed by a validated
-multilingual OCR backend** -- Tesseract has broad `.traineddata`
-language coverage but has not been benchmarked against PaddleOCR's
-purpose-built multilingual recognition models on receipt-specific
-degradations. This is flagged as the top follow-up item for whoever
-picks up backend work next.
+**Follow-up (same day): PaddleOCR gap closed via a Python 3.13 sidecar.**
+The original blocker (`paddlepaddle` ships no Python 3.14 wheel) was an
+interpreter-version gap, not a platform one, so it was closed by pinning
+a separate `python3.13` venv (`.venv-paddle/`, gitignored, Homebrew
+Python 3.13.9) with real `paddlepaddle==3.3.1` + `paddleocr==3.7.0`
+installed, and running PaddleOCR as a subprocess sidecar from the main
+Python 3.14 process (`receiptlingua.engines._paddle_sidecar_script`,
+invoked via the new `RECEIPTLINGUA_PADDLE_PYTHON` env var). Real smoke
+tests against the existing English/Tamil/Arabic fixtures show English
+recognized perfectly, Tamil recognized well but with a minor word-split
+error, and Arabic recognizing its text correctly but dropping the
+numeric total line entirely (empty string at 0.0 confidence) -- see
+`docs/adr/0002-ocr-backend-selection.md`'s "Update" section for the full
+honest breakdown. `PaddleOCREngine.recognize()` raises
+`UnsupportedBackendError` cleanly (not a crash) when the sidecar isn't
+configured, and `get_default_engine()` falls back to Tesseract
+automatically in that case, so a checkout with no sidecar set up is
+unaffected. **The "109 languages" goal still is not fully backed**: only
+English/Tamil/Arabic have been smoke-tested so far, Tamil/Arabic quality
+is imperfect, and this remains flagged as follow-up work (broader
+language benchmarking, plus designing the real multi-request sidecar
+transport -- current wiring is a one-process-per-call stopgap).
 
 What *is* validated end-to-end: Tesseract recognizing real rendered text
 (not placeholder black bars) in three scripts -- Latin (English), Tamil,
@@ -166,12 +171,18 @@ Apache-2.0) is not bundled in the repo or installed system-wide by
 default -- those two tests skip cleanly (not fail) when the data isn't
 present via `RECEIPTLINGUA_CACHE_DIR`'s `tessdata/` subdir or the system
 Tesseract's own tessdata directory, consistent with "never fetch missing
-models automatically." 111 of the Python test suite's tests pass (2
-skip on a fresh checkout without that language data fetched).
+models automatically." Real end-to-end PaddleOCR smoke tests were added
+the same way in `python/tests/test_paddleocr_engine.py`, skipping cleanly
+when `RECEIPTLINGUA_PADDLE_PYTHON` isn't set. 111 of the Python test
+suite's tests pass on a fresh checkout (7 skip: Tamil/Arabic Tesseract
+language data plus the 5 PaddleOCR sidecar tests, all set up and
+verified passing locally in this session).
 
 Not done, out of scope for this milestone per the task brief: structured
 field extraction (101-120), the Surya benchmark-only adapter (deprioritized
 in favor of getting one real backend fully working end to end -- tracked
-as future work), and MPS/CUDA accelerator probing (Tesseract is CPU-only,
-so no accelerator abstraction was built for it; revisit once a
-torch/paddle-based backend is actually running).
+as future work), MPS/CUDA accelerator probing (Tesseract is CPU-only, and
+the PaddleOCR sidecar smoke test used CPU inference only -- GPU probing
+for the sidecar is future work), and designing the real multi-request
+sidecar transport (current PaddleOCR wiring is a one-process-per-call
+subprocess stopgap, not the final protocol).

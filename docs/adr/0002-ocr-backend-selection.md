@@ -93,22 +93,84 @@ any fixture tried.
 
 ## Decision
 
-**Tesseract (via `pytesseract`) is the default, real, validated OCR
-backend for now.** It is wired up as a fully working
+**Tesseract (via `pytesseract`) remains the default, always-available OCR
+backend.** It is wired up as a fully working
 `receiptlingua.engines.tesseract_engine.TesseractEngine`, covered by a
 real end-to-end smoke test in `python/tests/test_tesseract_engine.py`
 against genuinely rendered (not fake/placeholder) English, Tamil, and
 Arabic text fixtures.
 
-**PaddleOCR is not usable in this environment today** and is *not*
-force-installed or faked. `receiptlingua.engines.paddleocr_engine.PaddleOCREngine`
-defines the intended adapter shape (constructor, `is_available()`,
-`supported_languages()`) so the integration is ready to fill in, but
-`recognize()` raises `UnsupportedBackendError` (protocol code
-`UNSUPPORTED_BACKEND`) immediately rather than shipping an untested code
-path. `PaddleOCREngine.is_available()` returns `False` here and the
-registry (`receiptlingua.engines.registry.get_default_engine`) skips it in
-favor of Tesseract automatically.
+**Update (same day, follow-up session): PaddleOCR now genuinely works,
+via a pinned-Python sidecar.** The blocker above was purely an
+interpreter-version gap (`paddlepaddle` ships no cp314 wheel), not a
+platform/arm64 problem, so it was closed by pinning the sidecar to an
+older, still-supported CPython:
+
+```
+$ brew install python@3.13   # already present on this machine
+$ /opt/homebrew/bin/python3.13 -m venv .venv-paddle   # gitignored, not committed
+$ .venv-paddle/bin/pip install paddlepaddle paddleocr
+$ .venv-paddle/bin/python -c "import paddle, paddleocr; print(paddle.__version__, paddleocr.__version__)"
+3.3.1 3.7.0
+```
+
+Both import cleanly under Python 3.13.9 (Homebrew, arm64) with no build
+errors. A real smoke test was then run against this repo's genuine
+rendered-text fixtures (`python/tests/fixtures/receipt_text_{eng,tam,ara}.png`),
+using PaddleOCR's `lang="en"` / `"ta"` / `"ar"` language groups and its
+`predict()` API (models auto-downloaded from PaddleOCR's official model
+hub on first use):
+
+- **English** (`PP-OCRv6`/`PP-OCRv5_server` det+rec): perfect --
+  `CORNER STORE / MILK3.49 / BREAD 2.99 / TOTAL 6.48`, confidence
+  0.999-1.000 on every line.
+- **Tamil** (`ta_PP-OCRv5_mobile_rec`): mostly correct but not perfect --
+  recognized `பிரைஸ் பட்டியல்` (correct) and `மோ து 100` / `மோ தூ 100`
+  (should be `மோத 100`; the word boundary/vowel-sign segmentation is
+  slightly off), confidence 0.89-0.98. Usable, not flawless.
+- **Arabic** (`arabic_PP-OCRv5_mobile_rec`): the two text lines recognize
+  correctly (`فاتورة المحل`, `المجموع`), but the third line (the numeric
+  total, `--2`) came back as an **empty string at confidence 0.0** in the
+  raw `predict()` output and is filtered out entirely by the engine
+  adapter -- i.e. Arabic digit/number recognition on this fixture
+  silently dropped a line rather than misreading it. Confidence
+  0.94-0.99 on the two lines it did recognize.
+
+Honest assessment: English is excellent, Tamil is good-but-imperfect,
+Arabic drops the numeric line rather than getting it wrong -- worth
+flagging for anyone relying on totals extraction. None of this is a
+crash or an empty result, so it clears the "do at least English + one
+non-Latin script for real" bar, but the Tamil/Arabic quality gap versus
+Tesseract's simpler recognition (also imperfect in its own ways, per
+above) should be benchmarked properly before flipping the *default*
+backend preference away from Tesseract.
+
+**Wiring**: `receiptlingua.engines.paddleocr_engine.PaddleOCREngine` now
+has a real `recognize()`. Because `paddlepaddle` cannot be imported into
+this package's own Python 3.14 process, it runs PaddleOCR as a
+**subprocess sidecar**: `RECEIPTLINGUA_PADDLE_PYTHON` (mirroring the
+`RECEIPTLINGUA_CACHE_DIR` naming convention) points at the sidecar
+interpreter (e.g. `.venv-paddle/bin/python`), and `recognize()` shells
+out to `receiptlingua.engines._paddle_sidecar_script`, passing the image
+path + language via a one-line JSON request on stdin and getting a
+one-line JSON response back on stdout (text/confidence/bbox/polygon per
+line). If the env var is unset or does not point at an executable file,
+`is_available()` returns `False` and `recognize()` raises
+`UnsupportedBackendError` (`UNSUPPORTED_BACKEND`) cleanly, exactly like
+before -- there is no crash path.
+
+This is explicitly a **stopgap transport**, not the final sidecar
+protocol: one process per `recognize()` call, no model caching across
+calls (each call re-pays PaddleOCR's model load), and no batching. The
+real multi-request sidecar protocol referenced in `protocol/` is still a
+separate, not-yet-designed piece of future work.
+
+Because the sidecar venv itself is local, gitignored, machine-specific
+setup (like Tesseract's `tam.traineddata`/`ara.traineddata` files
+before it), `receiptlingua.engines.registry.get_default_engine()` still
+tries PaddleOCR first and falls through to Tesseract automatically when
+`RECEIPTLINGUA_PADDLE_PYTHON` isn't configured -- so a plain checkout with
+no sidecar set up keeps working exactly as before, on Tesseract.
 
 ## Consequences / follow-up
 
@@ -119,16 +181,14 @@ favor of Tesseract automatically.
   degraded photos) has not been benchmarked against PaddleOCR's
   purpose-built PP-OCRv4/v5 multilingual recognition models. Revisit the
   primary-backend choice once PaddleOCR is actually runnable.
-- **Recommended path to unblock PaddleOCR**: run it as a separate sidecar
-  process pinned to a supported Python version (3.11, 3.12, or 3.13 all
-  have working `arm64` wheels for `paddlepaddle==3.3.1`; 3.13 is closest
-  to the current 3.14 and should be tried first), managed via `pyenv` or
-  `uv python install 3.13` once `uv` is available, rather than waiting on
-  upstream to ship a 3.14 wheel. This is consistent with the existing
-  sidecar architecture (`protocol/`) -- the JS/Ruby clients already talk
-  to a Python sidecar over a documented protocol, so that sidecar process
-  does not have to run under the same Python as the rest of the repo's
-  tooling.
+- **Resolved**: the sidecar-Python approach described here was carried
+  out (Python 3.13 via Homebrew, see "Update" above) and PaddleOCR now
+  runs for real through it. Remaining follow-up: design the real
+  multi-request sidecar protocol/transport (current wiring is a
+  one-process-per-call stopgap) and decide, after a proper
+  Tesseract-vs-PaddleOCR quality benchmark across more receipt fixtures,
+  whether PaddleOCR should become the *default* backend or stay an
+  opt-in one behind `RECEIPTLINGUA_PADDLE_PYTHON`.
 - **Language data is a setup-time, offline concern, never a runtime
   fetch.** `tam.traineddata`/`ara.traineddata` (and any other language
   beyond `eng`) must be placed either in the system Tesseract's own
