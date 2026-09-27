@@ -186,3 +186,41 @@ the PaddleOCR sidecar smoke test used CPU inference only -- GPU probing
 for the sidecar is future work), and designing the real multi-request
 sidecar transport (current PaddleOCR wiring is a one-process-per-call
 subprocess stopgap, not the final protocol).
+
+81-100 (language/script detection) done as of 2026-09-27. Unicode script
+segmentation uses the `regex` package's `\p{Script=...}` property
+matching (verified installable, MIT-permissive-adjacent PSF-style
+license, pure add-on to stdlib `re`) rather than a hand-vendored
+script-ranges table, since stdlib `unicodedata` has no direct script
+query. Language ID uses `py3langid` (MIT, maintained fork of
+`langid.py`): chosen over fastText's `lid.176` because its model is
+bundled in the pip package itself with no separate download step, which
+this project's offline-first requirement needs. `py3langid`'s bundled
+model covers 142 language labels.
+
+The `model_supported`/`receipt_verified` matrix
+(`python/src/receiptlingua/langid/data/language_matrix.json`, rendered as
+`LANGUAGES.md`) currently has **87 of 94 tracked languages marked
+`model_supported = true`**, including all 32 mandatory high-priority
+languages. `model_supported` required *both* a py3langid label *and* a
+documented Tesseract `tessdata_fast` language pack -- not just being on
+the mandatory wishlist. The 7 `false` entries are honest gaps: languages
+with a Tesseract pack but no py3langid label (Tibetan, Dhivehi,
+Tigrinya, Tongan, Cherokee, Inuktitut) or a py3langid label but no
+Tesseract pack (a Kurdish variant). Every single entry has
+`receipt_verified = false`, correctly, since no receipt benchmark exists
+yet (milestone 171-185).
+
+This is short of the aspirational ~109-language target, but that gap is
+**not a hard ceiling**: it reflects that only Tesseract's `eng` langpack
+is actually installed in this checkout (the other 31 mandatory languages'
+`.traineddata` files are documented as available upstream but not
+downloaded here, same situation as the `tam`/`ara` packs fetched by hand
+for milestone 56-80's smoke tests). Installing more packs via `brew
+install tesseract-lang` or manual `tessdata_fast` downloads is pure
+coverage-expansion, not blocked on any code written in this milestone.
+Chinese Simplified/Traditional are both tracked in the matrix as
+distinct entries (`zh-Hans`/`zh-Hant`, both `model_supported = true` via
+Tesseract's separate `chi_sim`/`chi_tra` packs) but share py3langid's one
+generic `zh` label -- documented explicitly in that entry's notes, since
+py3langid alone cannot distinguish the two scripts/variants.
