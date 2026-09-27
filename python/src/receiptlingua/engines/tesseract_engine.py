@@ -96,8 +96,12 @@ class TesseractEngine(OCREngine):
         pil_image = PILImage.fromarray(image)
 
         try:
+            # PSM 6 ("assume a single uniform block of text") suits
+            # receipts far better than Tesseract's default automatic page
+            # segmentation, which struggles on small, tightly-cropped
+            # text-only images like ours.
             data = pt.image_to_data(
-                pil_image, lang=lang_arg, output_type=pt.Output.DICT
+                pil_image, lang=lang_arg, config="--psm 6", output_type=pt.Output.DICT
             )
             version = str(pt.get_tesseract_version())
         except pt.TesseractError as exc:

@@ -99,6 +99,49 @@ def make_receipt_on_background() -> Image.Image:
     return background
 
 
+def _draw_text_receipt(
+    lines: list[str], font_path: str, *, size: tuple[int, int] = (360, 160), font_size: int = 22
+) -> Image.Image:
+    """A white receipt-like image with real, OCR-able rendered text.
+
+    Unlike ``_receipt_array`` (black bars standing in for text), this
+    renders actual glyphs via a real system font, for OCR engine smoke
+    tests that need genuinely recognizable text rather than a fake text
+    shape. Used by the engine layer (milestone 56-80), not preprocessing.
+    """
+    from PIL import ImageDraw, ImageFont
+
+    img = Image.new("RGB", size, "white")
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(font_path, font_size)
+    y = 15
+    for line in lines:
+        draw.text((15, y), line, fill="black", font=font)
+        y += font_size + 12
+    return img
+
+
+def make_text_receipt_english() -> Image.Image:
+    return _draw_text_receipt(
+        ["CORNER STORE", "MILK 3.49", "BREAD 2.99", "TOTAL 6.48"],
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+    )
+
+
+def make_text_receipt_tamil() -> Image.Image:
+    return _draw_text_receipt(
+        ["பிரைஸ் பட்டியல்", "மோத௃ 100"],
+        "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
+    )
+
+
+def make_text_receipt_arabic() -> Image.Image:
+    return _draw_text_receipt(
+        ["فاتورة المحل", "المجموع 100"],
+        "/System/Library/Fonts/SFArabic.ttf",
+    )
+
+
 def write_truncated_fixture(path: Path, source: Path, keep_bytes: int) -> None:
     data = source.read_bytes()
     path.write_bytes(data[:keep_bytes])
@@ -145,6 +188,10 @@ def main() -> None:
     make_noisy_receipt().save(FIXTURES_DIR / "receipt_noisy.png")
     make_perspective_receipt().save(FIXTURES_DIR / "receipt_perspective.png")
     make_receipt_on_background().save(FIXTURES_DIR / "receipt_on_background.png")
+
+    make_text_receipt_english().save(FIXTURES_DIR / "receipt_text_eng.png")
+    make_text_receipt_tamil().save(FIXTURES_DIR / "receipt_text_tam.png")
+    make_text_receipt_arabic().save(FIXTURES_DIR / "receipt_text_ara.png")
 
     write_truncated_fixture(
         FIXTURES_DIR / "corrupt_truncated.png",
