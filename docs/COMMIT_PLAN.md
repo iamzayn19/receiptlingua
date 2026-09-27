@@ -118,3 +118,60 @@ grayscale input over a hard binary mask). Open question for a future ADR:
 whether the v0 perspective-correction heuristic needs to be replaced by a
 trained document-boundary model once real-world (non-synthetic) receipt
 photos are available to benchmark against.
+
+56-80 (OCR engine abstraction) done as of 2026-09-27, in ~14 commits.
+Implemented under `python/receiptlingua/engines/`: an abstract
+`OCREngine` interface (`base.py`) mapping cleanly onto
+`protocol/schema/response.schema.json`'s `text_line`/`word`/
+`recognition_status` vocabulary (`types.py`); protocol-aligned error
+types matching `error.schema.json`'s error code enum exactly
+(`errors.py`); an offline model/language-data cache manager respecting
+`RECEIPTLINGUA_CACHE_DIR` (falling back to `$XDG_CACHE_HOME` then
+`~/.cache/receiptlingua`) that raises `MODEL_NOT_FOUND` rather than
+downloading anything (`cache.py`); backend capability probing
+(`capabilities.py`); a fast/accurate/auto mode-selection policy layer
+built on the existing image-quality heuristic scorer (`mode.py`); an
+engine registry/factory preferring PaddleOCR then falling back to
+Tesseract (`registry.py`); a real, working `TesseractEngine` adapter
+using `pytesseract`, with PSM 6 tuned for receipt-shaped images
+(`tesseract_engine.py`); and a `PaddleOCREngine` adapter stub with the
+intended integration shape, whose `recognize()` raises
+`UnsupportedBackendError` immediately in this environment
+(`paddleocr_engine.py`).
+
+Real, honest deviation from the original milestone list: **PaddleOCR
+could not be validated in this environment.** `paddlepaddle` has no
+distributable wheel for Python 3.14 (this repo's system Python) on
+macOS arm64 -- confirmed by direct wheel-availability checks showing
+`paddlepaddle==3.3.1` ships wheels through CPython 3.13 but not 3.14. It
+was not force-installed or faked; see
+`docs/adr/0002-ocr-backend-selection.md` for the exact failure output,
+the version-by-version wheel check, and the recommended follow-up (run
+PaddleOCR in a separate sidecar venv pinned to Python 3.11-3.13). This
+means **the "109 languages" goal is not yet backed by a validated
+multilingual OCR backend** -- Tesseract has broad `.traineddata`
+language coverage but has not been benchmarked against PaddleOCR's
+purpose-built multilingual recognition models on receipt-specific
+degradations. This is flagged as the top follow-up item for whoever
+picks up backend work next.
+
+What *is* validated end-to-end: Tesseract recognizing real rendered text
+(not placeholder black bars) in three scripts -- Latin (English), Tamil,
+and Arabic (RTL, correctly ordered) -- via new fixtures added to
+`python/tests/fixtures/generate.py` using system fonts (Arial, Tamil MN,
+SF Arabic) and real end-to-end smoke tests in
+`python/tests/test_tesseract_engine.py`. Tamil/Arabic language data
+(`tam.traineddata`/`ara.traineddata`, from `tesseract-ocr/tessdata_fast`,
+Apache-2.0) is not bundled in the repo or installed system-wide by
+default -- those two tests skip cleanly (not fail) when the data isn't
+present via `RECEIPTLINGUA_CACHE_DIR`'s `tessdata/` subdir or the system
+Tesseract's own tessdata directory, consistent with "never fetch missing
+models automatically." 111 of the Python test suite's tests pass (2
+skip on a fresh checkout without that language data fetched).
+
+Not done, out of scope for this milestone per the task brief: structured
+field extraction (101-120), the Surya benchmark-only adapter (deprioritized
+in favor of getting one real backend fully working end to end -- tracked
+as future work), and MPS/CUDA accelerator probing (Tesseract is CPU-only,
+so no accelerator abstraction was built for it; revisit once a
+torch/paddle-based backend is actually running).
