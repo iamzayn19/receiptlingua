@@ -1,0 +1,62 @@
+{
+  "schema_version": "0.1.0",
+  "engine": "paddleocr",
+  "engine_version": "pp-ocrv4-2024.06",
+  "mode": "accurate",
+  "image": {
+    "width": 1080,
+    "height": 1440,
+    "format": "jpeg",
+    "exif_orientation": 1
+  },
+  "processing_time_ms": 1043.2,
+  "languages": [
+    { "code": "ta", "confidence": 0.88 },
+    { "code": "en", "confidence": 0.82 }
+  ],
+  "scripts": ["Taml", "Latn"],
+  "full_text": "சென்னை சூப்பர் மார்க்கெட்\nNo. 45, Anna Salai, Chennai\nதேதி: 14/03/2026\nArisi (Rice) 5kg      450.00\nபருப்பு 1kg            120.00\nமொத்தம் (TOTAL)        570.00\nநிதி முறை: நகதம் (CASH)",
+  "text_lines": [
+    { "text": "சென்னை சூப்பர் மார்க்கெட்", "bbox": { "x": 80, "y": 50, "width": 420, "height": 44 }, "confidence": 0.9, "language": "ta", "script": "Taml", "status": "ok" },
+    { "text": "No. 45, Anna Salai, Chennai", "bbox": { "x": 80, "y": 100, "width": 420, "height": 32 }, "confidence": 0.95, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "தேதி: 14/03/2026", "bbox": { "x": 80, "y": 140, "width": 300, "height": 32 }, "confidence": 0.89, "language": "ta", "script": "Taml", "status": "ok" },
+    { "text": "Arisi (Rice) 5kg      450.00", "bbox": { "x": 70, "y": 200, "width": 460, "height": 32 }, "confidence": 0.86, "language": "en", "script": "Latn", "status": "ok" },
+    { "text": "பருப்பு 1kg            120.00", "bbox": { "x": 70, "y": 240, "width": 460, "height": 32 }, "confidence": 0.83, "language": "ta", "script": "Taml", "status": "ok" },
+    { "text": "மொத்தம் (TOTAL)        570.00", "bbox": { "x": 70, "y": 290, "width": 460, "height": 34 }, "confidence": 0.87, "language": "ta", "script": "Taml", "status": "ok" },
+    { "text": "நிதி முறை: நகதம் (CASH)", "bbox": { "x": 70, "y": 340, "width": 460, "height": 32 }, "confidence": 0.79, "language": "ta", "script": "Taml", "status": "uncertain" }
+  ],
+  "warnings": [
+    "low confidence on payment method line due to mixed-script OCR"
+  ],
+  "fields": {
+    "merchant": { "value": "சென்னை சூப்பர் மார்க்கெட்", "status": "ok", "confidence": 0.9, "evidence": { "text_line_indices": [0] } },
+    "merchant_address": { "value": "No. 45, Anna Salai, Chennai", "status": "ok", "confidence": 0.95, "evidence": { "text_line_indices": [1] } },
+    "date": { "value": "2026-03-14", "status": "ok", "confidence": 0.89, "evidence": { "text_line_indices": [2] } },
+    "time": { "status": "missing" },
+    "currency": { "value": "INR", "status": "inferred_field", "confidence": 0.65, "evidence": { "text_line_indices": [5] } },
+    "subtotal": { "status": "missing" },
+    "tax": { "status": "missing" },
+    "discounts": { "status": "missing" },
+    "total": { "value": 570.00, "status": "ok", "confidence": 0.87, "evidence": { "text_line_indices": [5] } },
+    "payment_method": { "value": "CASH", "status": "uncertain", "confidence": 0.6, "evidence": { "text_line_indices": [6] } },
+    "receipt_number": { "status": "missing" },
+    "line_items": [
+      {
+        "status": "ok",
+        "evidence": { "text_line_indices": [3] },
+        "description": { "value": "Arisi (Rice) 5kg", "status": "ok", "confidence": 0.86, "evidence": { "text_line_indices": [3] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.55, "evidence": { "text_line_indices": [3] } },
+        "unit_price": { "value": 450.00, "status": "ok", "confidence": 0.86, "evidence": { "text_line_indices": [3] } },
+        "item_total": { "value": 450.00, "status": "ok", "confidence": 0.86, "evidence": { "text_line_indices": [3] } }
+      },
+      {
+        "status": "ok",
+        "evidence": { "text_line_indices": [4] },
+        "description": { "value": "பருப்பு 1kg", "status": "ok", "confidence": 0.83, "evidence": { "text_line_indices": [4] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.55, "evidence": { "text_line_indices": [4] } },
+        "unit_price": { "value": 120.00, "status": "ok", "confidence": 0.83, "evidence": { "text_line_indices": [4] } },
+        "item_total": { "value": 120.00, "status": "ok", "confidence": 0.83, "evidence": { "text_line_indices": [4] } }
+      }
+    ]
+  }
+}
