@@ -56,6 +56,16 @@ from metrics import character_error_rate, normalized_edit_distance, word_error_r
 RESULTS_DIR = REPO_ROOT / "benchmarks" / "results"
 SUMMARY_PATH = REPO_ROOT / "benchmarks" / "latest_summary.json"
 
+#: The synth generator and receiptlingua's own language-id data use
+#: ISO 639-1 codes (ta, ar, hi, he), but the actual Tesseract tessdata_fast
+#: langpacks installed via `brew install tesseract-lang` are named with
+#: ISO 639-2/3 codes (tam, ara, hin, heb). The OCR engine itself does not
+#: do this remapping (a real, separate gap -- see
+#: python/src/receiptlingua/langid/data/language_matrix.json), so the
+#: harness maps it here purely so it can drive the *real* installed
+#: langpacks for a real benchmark run, without editing engine internals.
+TESSERACT_LANG_MAP: dict[str, str] = {"ta": "tam", "ar": "ara", "hi": "hin", "he": "heb"}
+
 
 def _parse_list_arg(value: str, valid: list[str]) -> list[str]:
     if value == "all":
@@ -85,7 +95,8 @@ def run_case(
     degraded_image.save(img_path)
     receipt.ground_truth.save(gt_path)
 
-    ocr = ReceiptOCR(backend=backend, languages=(language,) if language != "en" else ())
+    tess_lang = TESSERACT_LANG_MAP.get(language, language)
+    ocr = ReceiptOCR(backend=backend, languages=(tess_lang,) if language != "en" else ())
     start = time.perf_counter()
     error = None
     result = None
