@@ -96,6 +96,152 @@ _FONT_CANDIDATES: dict[str, dict[str, Any]] = {
         "script": "Hebr",
         "rtl": "true",
     },
+    # --- Added in the language-expansion pass (see docs/COMMIT_PLAN.md for
+    # the verification method: PIL ImageFont.getmask(ch).getbbox() probing
+    # of each script's real characters plus ASCII digits/punctuation,
+    # checking bboxes are NOT identical across distinct characters -- the
+    # signature of a ".notdef" tofu-box fallback). Every entry below was
+    # bbox-probed by hand on macOS before being added; none are assumed. ---
+    # Latin-script languages with diacritics: Arial.ttf was already verified
+    # (see "en" above) to have correct, distinct Latin glyphs; bbox-probed
+    # again here with each language's actual diacritic letters (À É Ñ Ç ß
+    # Ş ı Đ etc.) to confirm those specific accented glyphs aren't tofu.
+    "fr": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "de": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "es": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "pt": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "it": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "nl": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "tr": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "pl": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "id": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "ms": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    "vi": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Latn",
+        "rtl": "false",
+    },
+    # Cyrillic: Arial.ttf itself was bbox-probed with real Cyrillic letters
+    # (АБВГДЕЖЗИЙК, lowercase) plus ASCII and rendered every one distinctly
+    # -- no need for Arial Unicode.ttf here.
+    "ru": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Cyrl",
+        "rtl": "false",
+    },
+    "uk": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial.ttf"],
+        "script": "Cyrl",
+        "rtl": "false",
+    },
+    # Persian: Arial Unicode.ttf (already verified for ar/he) was bbox-
+    # probed again with Persian-specific extra letters not in Arabic proper
+    # (پ چ ژ گ) plus core Arabic letters and ASCII -- all distinct, real
+    # glyphs. NOTE: SFArabic.ttf (Apple's native Arabic font) was also
+    # tried and rejected -- it has the same ASCII-digit ".notdef" bug
+    # documented above for SFArabic/SFHebrew, so it is NOT used.
+    "fa": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial Unicode.ttf"],
+        "script": "Arab",
+        "rtl": "true",
+    },
+    # Urdu: reuses Arial Unicode.ttf, bbox-probed with Urdu-specific letters
+    # (retroflex ٹ ڈ ڑ, ں, ھ, ۓ) plus core Arabic letters and ASCII, all
+    # distinct. This renders Urdu in a plain Naskh style rather than the
+    # traditional Nastaliq calligraphic style real Urdu print uses --
+    # DecoTypeNastaleeqUrdu.ttc and NotoNastaliq.ttc were also probed and
+    # both do render real Nastaliq glyphs, but Arial Unicode was kept for
+    # consistency with ar/he/fa (one already-verified multi-script font)
+    # rather than adding a third distinct rendering style without a reason
+    # to prefer it.
+    "ur": {
+        "candidates": ["/System/Library/Fonts/Supplemental/Arial Unicode.ttf"],
+        "script": "Arab",
+        "rtl": "true",
+    },
+    # Devanagari (Marathi): reuses the same font already verified for "hi".
+    "mr": {
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Devanagari Sangam MN.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+        ],
+        "script": "Deva",
+        "rtl": "false",
+    },
+    # CJK.
+    "zh-Hans": {
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Songti.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        ],
+        "script": "Hani",
+        "rtl": "false",
+    },
+    "zh-Hant": {
+        "candidates": [
+            "/System/Library/Fonts/Supplemental/Songti.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        ],
+        "script": "Hani",
+        "rtl": "false",
+    },
+    "ja": {
+        "candidates": [
+            "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+            "/System/Library/Fonts/Hiragino Sans GB.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        ],
+        "script": "Jpan",
+        "rtl": "false",
+    },
+    "ko": {
+        "candidates": [
+            "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        ],
+        "script": "Hang",
+        "rtl": "false",
+    },
 }
 
 
@@ -119,7 +265,33 @@ FONTS: dict[str, dict[str, str]] = {
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = tuple(FONTS.keys())
 
-_CURRENCY_BY_LANG = {"en": "USD", "ta": "INR", "hi": "INR", "ar": "AED", "he": "ILS"}
+_CURRENCY_BY_LANG = {
+    "en": "USD",
+    "ta": "INR",
+    "hi": "INR",
+    "ar": "AED",
+    "he": "ILS",
+    "fr": "EUR",
+    "de": "EUR",
+    "es": "EUR",
+    "pt": "EUR",
+    "it": "EUR",
+    "nl": "EUR",
+    "tr": "TRY",
+    "pl": "PLN",
+    "id": "IDR",
+    "ms": "MYR",
+    "vi": "VND",
+    "ru": "RUB",
+    "uk": "UAH",
+    "fa": "IRR",
+    "ur": "PKR",
+    "mr": "INR",
+    "zh-Hans": "CNY",
+    "zh-Hant": "TWD",
+    "ja": "JPY",
+    "ko": "KRW",
+}
 
 # Word banks: deliberately fictional -- no real business names, addresses,
 # or brands. Store/street name parts are generic nouns/patterns that read
@@ -170,6 +342,152 @@ _WORD_BANKS: dict[str, dict[str, list[str]]] = {
         "street": ["רחוב הראשי", "רחוב הפרחים"],
         "items": ["חלב", "לחם", "ביצים", "אורז", "תה", "סוכר"],
         "city": ["העיר"],
+    },
+    # --- Added in the language-expansion pass. Deliberately small: only
+    # vocabulary the author is confident is real, correctly-spelled
+    # everyday-receipt vocabulary in that language -- not padded out with
+    # guessed words. Languages with a verified font but no vocabulary the
+    # author was confident enough to write are left out entirely (see
+    # docs/COMMIT_PLAN.md for the explicit list and reasons). ---
+    "fr": {
+        "store_prefix": ["Soleil", "Rivière", "Vieux", "Bon"],
+        "store_suffix": ["Marché", "Épicerie", "Supérette"],
+        "street": ["Rue du Chêne", "Rue Principale", "Rue des Fleurs", "Rue du Moulin"],
+        "items": ["Lait", "Pain", "Œufs", "Café", "Riz", "Beurre", "Pommes", "Savon", "Thé", "Sucre"],
+        "city": ["Villefleur", "Bourgneuf"],
+    },
+    "de": {
+        "store_prefix": ["Sonnen", "Grüner", "Alter", "Blauer"],
+        "store_suffix": ["Markt", "Laden", "Supermarkt"],
+        "street": ["Hauptstraße", "Lindenweg", "Gartenstraße", "Mühlenweg"],
+        "items": ["Milch", "Brot", "Eier", "Kaffee", "Reis", "Butter", "Äpfel", "Seife", "Tee", "Zucker"],
+        "city": ["Sonnenfeld", "Neustadt"],
+    },
+    "es": {
+        "store_prefix": ["Sol", "Río", "Verde", "Viejo"],
+        "store_suffix": ["Mercado", "Tienda", "Almacén"],
+        "street": ["Calle Mayor", "Calle del Río", "Calle de las Flores"],
+        "items": ["Leche", "Pan", "Huevos", "Café", "Arroz", "Mantequilla", "Manzanas", "Jabón", "Té", "Azúcar"],
+        "city": ["Villasol", "Puebloverde"],
+    },
+    "pt": {
+        "store_prefix": ["Sol", "Rio", "Verde", "Velho"],
+        "store_suffix": ["Mercado", "Loja", "Armazém"],
+        "street": ["Rua Principal", "Rua das Flores", "Rua do Rio"],
+        "items": ["Leite", "Pão", "Ovos", "Café", "Arroz", "Manteiga", "Maçãs", "Sabão", "Chá", "Açúcar"],
+        "city": ["Vilanova", "Campoverde"],
+    },
+    "it": {
+        "store_prefix": ["Sole", "Fiume", "Verde", "Vecchio"],
+        "store_suffix": ["Mercato", "Negozio", "Bottega"],
+        "street": ["Via Principale", "Via dei Fiori", "Via del Fiume"],
+        "items": ["Latte", "Pane", "Uova", "Caffè", "Riso", "Burro", "Mele", "Sapone", "Tè", "Zucchero"],
+        "city": ["Villasole", "Campoverde"],
+    },
+    "nl": {
+        "store_prefix": ["Zonne", "Groene", "Oude", "Blauwe"],
+        "store_suffix": ["Markt", "Winkel", "Supermarkt"],
+        "street": ["Hoofdstraat", "Kerkstraat", "Molenweg"],
+        "items": ["Melk", "Brood", "Eieren", "Koffie", "Rijst", "Boter", "Appels", "Zeep", "Thee", "Suiker"],
+        "city": ["Zonnedorp", "Nieuwstad"],
+    },
+    "tr": {
+        "store_prefix": ["Altın", "Yeşil", "Nehir", "Güneş"],
+        "store_suffix": ["Market", "Bakkal", "Mağaza"],
+        "street": ["Cumhuriyet Caddesi", "Çiçek Sokağı", "Nehir Yolu"],
+        "items": ["Süt", "Ekmek", "Yumurta", "Kahve", "Pirinç", "Tereyağı", "Elma", "Sabun", "Çay", "Şeker"],
+        "city": ["Güneşköy"],
+    },
+    "pl": {
+        "store_prefix": ["Złoty", "Zielony", "Stary", "Rzeczny"],
+        "store_suffix": ["Market", "Sklep", "Delikatesy"],
+        "street": ["Główna", "Kwiatowa", "Rzeczna"],
+        "items": ["Mleko", "Chleb", "Jajka", "Kawa", "Ryż", "Masło", "Jabłka", "Mydło", "Herbata", "Cukier"],
+        "city": ["Zielonogród"],
+    },
+    "ru": {
+        "store_prefix": ["Золотой", "Зелёный", "Речной", "Старый"],
+        "store_suffix": ["Рынок", "Магазин", "Лавка"],
+        "street": ["Главная улица", "Речная улица", "Садовая улица"],
+        "items": ["Молоко", "Хлеб", "Яйца", "Кофе", "Рис", "Масло", "Яблоки", "Мыло", "Чай", "Сахар"],
+        "city": ["Речноград"],
+    },
+    "uk": {
+        "store_prefix": ["Золотий", "Зелений", "Річковий", "Старий"],
+        "store_suffix": ["Ринок", "Магазин", "Лавка"],
+        "street": ["Головна вулиця", "Річкова вулиця", "Садова вулиця"],
+        "items": ["Молоко", "Хліб", "Яйця", "Кава", "Рис", "Масло", "Яблука", "Мило", "Чай", "Цукор"],
+        "city": ["Річкоград"],
+    },
+    "id": {
+        "store_prefix": ["Matahari", "Hijau", "Sungai", "Emas"],
+        "store_suffix": ["Pasar", "Toko", "Warung"],
+        "street": ["Jalan Utama", "Jalan Melati", "Jalan Sungai"],
+        "items": ["Susu", "Roti", "Telur", "Kopi", "Beras", "Mentega", "Apel", "Sabun", "Teh", "Gula"],
+        "city": ["Sungaimas"],
+    },
+    "ms": {
+        "store_prefix": ["Matahari", "Hijau", "Sungai", "Emas"],
+        "store_suffix": ["Pasar", "Kedai", "Gedung"],
+        "street": ["Jalan Utama", "Jalan Bunga", "Jalan Sungai"],
+        "items": ["Susu", "Roti", "Telur", "Kopi", "Beras", "Mentega", "Epal", "Sabun", "Teh", "Gula"],
+        "city": ["Bandar Emas"],
+    },
+    "vi": {
+        "store_prefix": ["Vàng", "Xanh", "Sông", "Mới"],
+        "store_suffix": ["Chợ", "Tiệm", "Cửa Hàng"],
+        "street": ["Đường Chính", "Đường Hoa", "Đường Sông"],
+        "items": ["Sữa", "Bánh Mì", "Trứng", "Cà Phê", "Gạo", "Bơ", "Táo", "Xà Phòng", "Trà", "Đường"],
+        "city": ["Sông Vàng"],
+    },
+    "fa": {
+        "store_prefix": ["طلایی", "سبز", "رودخانه", "آبی"],
+        "store_suffix": ["بازار", "فروشگاه", "مغازه"],
+        "street": ["خیابان اصلی", "خیابان گل"],
+        "items": ["شیر", "نان", "تخم مرغ", "برنج", "چای", "شکر"],
+        "city": ["شهر"],
+    },
+    "ur": {
+        "store_prefix": ["سنہری", "سبز", "دریا", "نیلا"],
+        "store_suffix": ["بازار", "دکان", "سٹور"],
+        "street": ["مین روڈ", "پھول والی گلی"],
+        "items": ["دودھ", "روٹی", "انڈے", "چائے", "چینی", "چاول"],
+        "city": ["شہر"],
+    },
+    "mr": {
+        "store_prefix": ["सोनेरी", "हरित", "नदी", "जुना"],
+        "store_suffix": ["बाजार", "दुकान"],
+        "street": ["मुख्य रस्ता", "फुलांचा रस्ता"],
+        "items": ["दूध", "पाव", "अंडी", "चहा", "साखर", "तांदूळ"],
+        "city": ["शहर"],
+    },
+    "zh-Hans": {
+        "store_prefix": ["金", "绿", "河", "新"],
+        "store_suffix": ["市场", "商店", "超市"],
+        "street": ["中山路", "花园街", "河边路"],
+        "items": ["牛奶", "面包", "鸡蛋", "咖啡", "大米", "黄油", "苹果", "肥皂", "茶", "糖"],
+        "city": ["新城"],
+    },
+    "zh-Hant": {
+        "store_prefix": ["金", "綠", "河", "新"],
+        "store_suffix": ["市場", "商店", "超市"],
+        "street": ["中山路", "花園街", "河邊路"],
+        "items": ["牛奶", "麵包", "雞蛋", "咖啡", "大米", "奶油", "蘋果", "肥皂", "茶", "糖"],
+        "city": ["新城"],
+    },
+    "ja": {
+        "store_prefix": ["金", "緑", "川", "新"],
+        "store_suffix": ["市場", "商店", "スーパー"],
+        "street": ["中央通り", "桜通り", "川辺通り"],
+        "items": ["牛乳", "パン", "卵", "コーヒー", "米", "バター", "りんご", "石鹸", "茶", "砂糖"],
+        "city": ["新町"],
+    },
+    "ko": {
+        "store_prefix": ["금빛", "초록", "강", "새"],
+        "store_suffix": ["시장", "상점", "마트"],
+        "street": ["중앙로", "꽃길", "강변로"],
+        "items": ["우유", "빵", "계란", "커피", "쌀", "버터", "사과", "비누", "차", "설탕"],
+        "city": ["새마을"],
     },
 }
 
