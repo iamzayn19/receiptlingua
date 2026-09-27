@@ -1,0 +1,59 @@
+{
+  "schema_version": "0.1.0",
+  "engine": "paddleocr",
+  "engine_version": "pp-ocrv4-2024.06",
+  "mode": "accurate",
+  "image": {
+    "width": 1024,
+    "height": 1365,
+    "format": "png",
+    "exif_orientation": 1
+  },
+  "processing_time_ms": 934.7,
+  "languages": [{ "code": "ar", "confidence": 0.93 }],
+  "scripts": ["Arab"],
+  "full_text": "سوبر ماركت الأمانة\nشارع الملك فهد، الرياض\nالتاريخ: 2026-03-14\nأرز بسمتي 5 كجم       45.00\nزيت زيتون 1 لتر       32.50\nالإجمالي              77.50\nضريبة القيمة المضافة   11.63\nالمجموع الكلي         89.13\nطريقة الدفع: نقدا",
+  "text_lines": [
+    { "text": "سوبر ماركت الأمانة", "bbox": { "x": 60, "y": 55, "width": 400, "height": 42 }, "confidence": 0.95, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "شارع الملك فهد، الرياض", "bbox": { "x": 60, "y": 105, "width": 400, "height": 32 }, "confidence": 0.93, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "التاريخ: 2026-03-14", "bbox": { "x": 60, "y": 145, "width": 320, "height": 30 }, "confidence": 0.94, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "أرز بسمتي 5 كجم       45.00", "bbox": { "x": 50, "y": 200, "width": 440, "height": 32 }, "confidence": 0.9, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "زيت زيتون 1 لتر       32.50", "bbox": { "x": 50, "y": 240, "width": 440, "height": 32 }, "confidence": 0.89, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "الإجمالي              77.50", "bbox": { "x": 50, "y": 290, "width": 440, "height": 32 }, "confidence": 0.92, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "ضريبة القيمة المضافة   11.63", "bbox": { "x": 50, "y": 330, "width": 440, "height": 32 }, "confidence": 0.88, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "المجموع الكلي         89.13", "bbox": { "x": 50, "y": 375, "width": 440, "height": 34 }, "confidence": 0.93, "language": "ar", "script": "Arab", "status": "ok" },
+    { "text": "طريقة الدفع: نقدا", "bbox": { "x": 60, "y": 425, "width": 300, "height": 30 }, "confidence": 0.91, "language": "ar", "script": "Arab", "status": "ok" }
+  ],
+  "warnings": [],
+  "fields": {
+    "merchant": { "value": "سوبر ماركت الأمانة", "status": "ok", "confidence": 0.95, "evidence": { "text_line_indices": [0] } },
+    "merchant_address": { "value": "شارع الملك فهد، الرياض", "status": "ok", "confidence": 0.93, "evidence": { "text_line_indices": [1] } },
+    "date": { "value": "2026-03-14", "status": "ok", "confidence": 0.94, "evidence": { "text_line_indices": [2] } },
+    "time": { "status": "missing" },
+    "currency": { "value": "SAR", "status": "inferred_field", "confidence": 0.7, "evidence": { "text_line_indices": [5, 6, 7] } },
+    "subtotal": { "value": 77.50, "status": "ok", "confidence": 0.92, "evidence": { "text_line_indices": [5] } },
+    "tax": { "value": 11.63, "status": "ok", "confidence": 0.88, "evidence": { "text_line_indices": [6] } },
+    "discounts": { "status": "missing" },
+    "total": { "value": 89.13, "status": "ok", "confidence": 0.93, "evidence": { "text_line_indices": [7] } },
+    "payment_method": { "value": "نقدا", "status": "ok", "confidence": 0.91, "evidence": { "text_line_indices": [8] } },
+    "receipt_number": { "status": "missing" },
+    "line_items": [
+      {
+        "status": "ok",
+        "evidence": { "text_line_indices": [3] },
+        "description": { "value": "أرز بسمتي 5 كجم", "status": "ok", "confidence": 0.9, "evidence": { "text_line_indices": [3] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.55, "evidence": { "text_line_indices": [3] } },
+        "unit_price": { "value": 45.00, "status": "ok", "confidence": 0.9, "evidence": { "text_line_indices": [3] } },
+        "item_total": { "value": 45.00, "status": "ok", "confidence": 0.9, "evidence": { "text_line_indices": [3] } }
+      },
+      {
+        "status": "ok",
+        "evidence": { "text_line_indices": [4] },
+        "description": { "value": "زيت زيتون 1 لتر", "status": "ok", "confidence": 0.89, "evidence": { "text_line_indices": [4] } },
+        "quantity": { "value": 1, "status": "inferred_field", "confidence": 0.55, "evidence": { "text_line_indices": [4] } },
+        "unit_price": { "value": 32.50, "status": "ok", "confidence": 0.89, "evidence": { "text_line_indices": [4] } },
+        "item_total": { "value": 32.50, "status": "ok", "confidence": 0.89, "evidence": { "text_line_indices": [4] } }
+      }
+    ]
+  }
+}
