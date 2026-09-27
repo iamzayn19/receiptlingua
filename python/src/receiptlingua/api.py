@@ -260,6 +260,26 @@ class ReceiptOCR:
         self._engine = engine
         return engine
 
+    def close(self) -> None:
+        """Release any resources the resolved engine holds (e.g. a PaddleOCR
+        sidecar daemon spawned by a previous ``scan()`` call).
+
+        ``ReceiptOCR`` reuses one engine instance across every ``scan()``
+        call on the same object specifically so a persistent sidecar (see
+        ``PaddleOCREngine``) only pays its model-load cost once; call
+        ``close()`` (or use this object as a context manager) when done
+        with it so that sidecar is shut down cleanly rather than left
+        running.
+        """
+        if self._engine is not None:
+            self._engine.close()
+
+    def __enter__(self) -> ReceiptOCR:
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        self.close()
+
     def _run_ocr(self, engine: OCREngine, pixels: np.ndarray) -> EngineResult:
         try:
             return engine.recognize(pixels, languages=self.languages)

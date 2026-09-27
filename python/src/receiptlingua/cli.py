@@ -32,15 +32,19 @@ def _print_json(obj: Any) -> None:
 
 def cmd_scan(args: argparse.Namespace) -> int:
     languages = tuple(args.lang.split(",")) if args.lang and args.lang != "auto" else None
-    try:
-        ocr = ReceiptOCR(mode=args.mode, languages=languages)
-        result = ocr.scan(args.path)
-    except ReceiptOCRError as exc:
-        if args.json:
-            _print_json(exc.to_dict())
-        else:
-            print(f"error: [{exc.code}] {exc.message}", file=sys.stderr)
-        return 1
+    # A single `receiptlingua scan` invocation only ever does one scan, so
+    # there's no repeated-call benefit from the sidecar daemon here -- but
+    # we still must not leave it running after the process is "done";
+    # ReceiptOCR is used as a context manager purely for that cleanup.
+    with ReceiptOCR(mode=args.mode, languages=languages) as ocr:
+        try:
+            result = ocr.scan(args.path)
+        except ReceiptOCRError as exc:
+            if args.json:
+                _print_json(exc.to_dict())
+            else:
+                print(f"error: [{exc.code}] {exc.message}", file=sys.stderr)
+            return 1
 
     if args.json:
         print(result.to_json())
