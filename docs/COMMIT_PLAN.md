@@ -224,3 +224,72 @@ distinct entries (`zh-Hans`/`zh-Hant`, both `model_supported = true` via
 Tesseract's separate `chi_sim`/`chi_tra` packs) but share py3langid's one
 generic `zh` label -- documented explicitly in that entry's notes, since
 py3langid alone cannot distinguish the two scripts/variants.
+
+101-120 (structured receipt extraction) done as of 2026-09-27, in ~13
+commits rather than the ~20 implied by the range (two of the planned
+commits were absorbed as bugfixes into the feature commit that exposed
+them -- see the amount-regex and payment-keyword fixes below -- rather
+than landing as separate no-op-then-fix pairs).
+
+Implemented under `python/src/receiptlingua/extract/`, deliberately
+**rule-based, not ML-based**, for v0 -- a reasonable, honestly-scoped
+choice for this milestone rather than an accuracy claim:
+
+- `reading_order.py`: reconstructs top-to-bottom / RTL-aware reading
+  order from bbox geometry (y-overlap row clustering, x-ordering within
+  a row, reversed for rows whose script is RTL). Geometry-only: it does
+  not detect true multi-column layouts, so a two-column receipt is
+  currently ordered as one wide row -- a known limitation.
+- `currency.py`: symbol + ISO 4217 code detection. Handles the
+  genuinely-ambiguous cases (`¥` shared by JPY/CNY, `Rs` shared by
+  several rupee currencies) by reporting an `uncertain` candidate set
+  instead of guessing.
+- `amounts.py`: locale-defensive number parsing (US vs. European
+  separator conventions); a single separator with exactly 3 trailing
+  digits (`"1,234"`/`"1.234"`) is treated as genuinely ambiguous and
+  reported as such rather than resolved by guessing.
+- `amount_fields.py`, `dates.py`, `merchant.py`, `receipt_number.py`,
+  `payment_method.py`, `line_items.py`: keyword/pattern/heuristic
+  extraction for the remaining `fields` entries, each producing a
+  `ScalarField`/`LineItem` with `status` and `evidence` mirroring
+  `response.schema.json`'s `scalar_field`/`line_item` defs exactly
+  (`types.py`). `total` is computed and marked `inferred_field` (with
+  evidence pointing at the subtotal/tax/discount lines it derives from,
+  never a nonexistent total line) when the total line itself is
+  missing but subtotal+tax are both present.
+- `extractor.py`: `extract_fields(text_lines, rtl_flags)` orchestrates
+  all of the above and remaps every field's evidence back to the
+  original (pre-reading-order-reconstruction) `text_lines` indices.
+
+**Known, deliberately-flagged weaknesses for the 171-185 benchmark
+milestone**, so this is not oversold as more robust than it is:
+
+1. **Line-item table extraction** is the weakest structural piece: it
+   treats each physical line independently with no real column-x
+   alignment across multiple lines, so it only works reliably on
+   simple single-column layouts where one item = one line. Multi-line
+   item descriptions, wrapped text, and complex multi-currency tables
+   are not handled.
+2. **Merchant-name extraction** is a first-few-non-noise-lines
+   heuristic and is *always* returned as `status: "uncertain"`
+   (never `"ok"`), by design -- it is the least reliable field here.
+3. **Multilingual keyword coverage is intentionally thin**: only
+   English plus a small set of high-confidence Arabic terms
+   (total/tax/discount) are included in `keywords.py`. Tamil, Urdu, and
+   most of the other 87 `model_supported` languages have NO keyword
+   coverage here -- their standard receipt vocabulary was not sourced
+   with enough confidence for this pass, so per the project's
+   no-hallucination constraint those languages fall back to
+   number-proximity heuristics only rather than shipping a guessed
+   translation. This should be closed with native-speaker review before
+   real accuracy claims are made.
+
+Two bugs were caught by the hand-constructed tests during this
+milestone (both fixed, both worth remembering): the amount-token regex
+originally allowed whitespace inside a match, silently merging adjacent
+numbers on a line (`"2 1.50 3.00"` parsed as one bogus token) and broke
+line-item parsing entirely; and the naive `"total"` keyword match
+matched inside `"subtotal"`, causing a subtotal row to be misread as the
+grand total. Both are exactly the kind of failure hand-constructed
+input-based unit testing (as opposed to only real-image benchmarking)
+is well-suited to catch early.
