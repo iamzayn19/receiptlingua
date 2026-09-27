@@ -17,13 +17,13 @@ Known limitations (do not oversell this downstream):
   simplification, not a detected value, so it is NOT given evidence of its
   own (it rides along with the line's overall status).
 
-A line qualifies as a candidate item row when it contains at least two
-numeric tokens, the last of which is treated as the item_total, and (when a
-third numeric token exists before it) the first two are treated as
-quantity and unit_price with a sanity check that qty * unit_price
-approximately equals item_total (within rounding tolerance). Lines that
-match total/subtotal/tax/discount keywords are excluded so summary rows
-are never mistaken for item rows.
+A line qualifies as a candidate item row when it has leading description
+text followed by at least one numeric token, the last of which is treated
+as the item_total; when a further two numeric tokens exist before it, the
+first two are treated as quantity and unit_price with a sanity check that
+qty * unit_price approximately equals item_total (within rounding
+tolerance). Lines that match total/subtotal/tax/discount keywords are
+excluded so summary rows are never mistaken for item rows.
 """
 
 from __future__ import annotations
@@ -56,7 +56,7 @@ def extract_line_items(lines: list[str]) -> list[LineItem]:
         if not text.strip() or _is_summary_line(text):
             continue
         numbers = find_amounts(text)
-        if len(numbers) < 2:
+        if len(numbers) < 1:
             continue
 
         parsed = [parse_amount(n) for n in numbers]

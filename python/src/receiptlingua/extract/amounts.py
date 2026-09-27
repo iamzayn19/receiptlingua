@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-_NUMBER_RE = re.compile(r"[0-9][0-9.,\s]*[0-9]|[0-9]")
+_NUMBER_RE = re.compile(r"[0-9][0-9.,]*[0-9]|[0-9]")
 
 
 @dataclass(frozen=True)
