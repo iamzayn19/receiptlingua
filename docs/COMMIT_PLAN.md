@@ -397,3 +397,84 @@ unchanged from prior milestones and still open: the PaddleOCR sidecar
 remains a one-process-per-call stopgap (not the final transport), and
 only English/Tamil/Arabic have any real language-pack/benchmark
 verification at all.
+
+141-155 (JavaScript client) done as of 2026-09-27. Built a real, tested
+npm package under `javascript/`:
+
+- `javascript/package.json`: name `receiptlingua`, ESM-only
+  (`"type": "module"`, no dual CJS build -- there is no existing CJS
+  consumer to justify the extra build complexity; documented as a
+  revisit-if-needed choice in `javascript/README.md`). TypeScript via
+  plain `tsc` (no bundler -- this is a library, not an app, and `tsc`
+  alone is sufficient). `license: "Apache-2.0"`, `repository` pointing
+  at `github.com/iamzayn19/receiptlingua` -- **not yet an actual pushed
+  remote**: `git remote -v` is empty in this checkout, so that URL is a
+  placeholder for the intended eventual repo, not a claim it exists yet.
+- `javascript/src/receipt-ocr.ts` (`ReceiptOCR` class): `scan(pathOrBuffer,
+  options?)` accepts a file path or raw `Buffer` (buffers are written to
+  a temp file and cleaned up, since the transport below needs a path).
+  Constructor takes `cliCommand` (override the program+args used to
+  invoke Python, default `["receiptlingua"]` resolved via PATH),
+  `mode`, `languages`, `timeoutMs`, `cacheDir` (maps to
+  `RECEIPTLINGUA_CACHE_DIR`, matching `engines/cache.py`'s
+  `CacheManager.from_env()` lookup order).
+- **Transport, and its known limitation (read this before assuming
+  performance)**: `protocol/README.md` explicitly leaves the sidecar
+  transport (stdio vs. local socket, plus framing) as an open ADR item,
+  not yet built. Rather than inventing that transport prematurely, this
+  milestone has the JS client shell out to the already-working Python
+  `receiptlingua` CLI (`scan --json`) as a **subprocess per call**,
+  parsing stdout as the `response.schema.json` envelope. This is
+  correct and protocol-conformant, but it is a stopgap: **every
+  `scan()` call pays a full fresh Python-interpreter-plus-model-load
+  startup cost**, because nothing is kept warm between calls. The
+  concrete near-term follow-up for whoever implements the real ADR is a
+  persistent sidecar daemon (spawned once, spoken to over stdio/socket)
+  that this client can be pointed at instead of re-spawning per call.
+- Error mapping: `ReceiptLinguaError` (`javascript/src/errors.ts`)
+  carries a `.code` drawn from the same vocabulary as
+  `error.schema.json`'s enum, plus two client-local codes not part of
+  the protocol: `CLI_NOT_FOUND` (Python/`receiptlingua` missing or not
+  runnable -- raised with an actionable message pointing at `pip
+  install receiptlingua` or the `cliCommand` override, not a bare
+  Node `ENOENT`) and `PROTOCOL_ERROR` (CLI produced non-JSON, or JSON
+  that doesn't match the expected envelope shape).
+- Types (`javascript/src/types.ts`): hand-written to mirror
+  `response.schema.json`/`error.schema.json` field-for-field rather than
+  codegen'd -- the schema's `$ref`/`$defs` reuse (scalar_field, bbox,
+  polygon, evidence) is small and stable enough that hand-writing once
+  was more precise than tuning a generator's output for this shape;
+  documented as a revisit point (`json-schema-to-typescript`) if the
+  schema grows materially.
+- Tests: `vitest`. Unit tests (`test/receipt-ocr.unit.test.ts`, 8 tests)
+  mock `node:child_process`'s `spawn` to test arg-building, JSON
+  parsing, and every error-mapping path without needing Python at all.
+  A real integration test (`test/receipt-ocr.integration.test.ts`, 3
+  tests) shells out to the actual installed Python CLI (checks
+  `python/.venv/bin/receiptlingua` first, then PATH) against
+  `python/tests/fixtures/receipt_text_eng.png`, asserting a real,
+  non-empty, schema-shaped result -- for both a path and a `Buffer` --
+  plus a real `INVALID_IMAGE` error for a nonexistent path. Uses
+  `describe.skipIf` to skip (not fail) if no working `receiptlingua` CLI
+  is found, mirroring the Python suite's skip-on-missing-langpack
+  pattern. All 11 tests pass in this environment, against the real
+  Python CLI (verified, not mocked, for the integration file).
+- `eslint` (flat config, `typescript-eslint` recommended rules) +
+  `prettier`, both passing clean on all source/test files.
+- Verified for real: `npm install && npm run build && npm test` all
+  genuinely pass in this environment (`npm run build` via `tsc`, zero
+  errors; `npm run lint` clean; 11/11 tests pass including the real
+  Python-CLI integration tests, not just the mocked unit tests).
+  `npm publish` was intentionally never run -- `npm whoami` confirms no
+  npm login in this environment, and per project rules a package this
+  early/untested on a real registry is premature regardless.
+
+**Known follow-up, not papered over**: the shell-out-per-call transport
+above is the single biggest limitation of this milestone -- it works and
+is fully protocol-conformant, but is not viable for scanning more than
+an occasional image from Node without a real sidecar daemon. Building
+that daemon (deciding stdio vs. socket framing per the still-open ADR,
+then updating `ReceiptOCR` to talk to a long-lived process instead of
+spawning one per call) is the concrete next step for this package,
+separate from and blocking on the Ruby client milestone (156-170) which
+will face the identical transport question.
