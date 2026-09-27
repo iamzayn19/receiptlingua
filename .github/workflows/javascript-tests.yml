@@ -17,7 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        node-version: [18, 20, 22]
+        # vitest's toolchain (rolldown) needs node:util's styleText, added in
+        # Node 20; Node 18 fails at vitest startup.
+        node-version: [20, 22, 24]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
