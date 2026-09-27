@@ -1,0 +1,47 @@
+name: JavaScript tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "javascript/**"
+      - ".github/workflows/javascript-tests.yml"
+  pull_request:
+    paths:
+      - "javascript/**"
+      - ".github/workflows/javascript-tests.yml"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [18, 20, 22]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: javascript
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: javascript/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
