@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ReceiptLingua</title>
+<meta name="description" content="Offline-first, multilingual receipt OCR that runs without a paid API." />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html">ReceiptLingua</a>
+  <nav class="site-nav">
+    <a href="index.html" class="active">Home</a>
+    <a href="languages.html">Languages</a>
+    <a href="benchmarks.html">Benchmarks</a>
+    <a href="docs.html">Docs</a>
+    <a href="support.html">Support</a>
+  </nav>
+</header>
+<main>
+  <h1>ReceiptLingua</h1>
+  <p class="tagline">Offline-first, multilingual receipt OCR — no paid API required.</p>
+
+  <div class="status-banner">
+    <strong>Status: pre-0.1, early development.</strong>
+    Nothing here is published to PyPI/npm/RubyGems yet. This site documents
+    real, current progress, not a marketing preview — numbers below come
+    straight from the repository's own
+    <a href="https://github.com/iamzayn19/receiptlingua/blob/main/BENCHMARKS.md">BENCHMARKS.md</a>.
+  </div>
+
+  <h2>What it solves</h2>
+  <p>
+    Receipt OCR tools tend to assume clean, English-language, well-lit
+    photos. Real receipts are frequently faded, crumpled, thermal-printed,
+    torn, rotated, badly photographed, or in a language/script the tool
+    was never tuned for. ReceiptLingua targets that harder case directly:
+  </p>
+  <div class="card-grid">
+    <div class="card">
+      <h3>Offline-first</h3>
+      <p>Runs fully offline after model download — no per-call API fees, no
+      sending receipt photos to a third-party cloud service by default.</p>
+    </div>
+    <div class="card">
+      <h3>Multilingual by design</h3>
+      <p>Tracks a language-support matrix across dozens of languages and
+      scripts, including right-to-left scripts (Arabic, Hebrew), with an
+      honest distinction between "the model can technically produce output"
+      and "verified to work well on real receipts."</p>
+    </div>
+    <div class="card">
+      <h3>Structured extraction with evidence</h3>
+      <p>Merchant, date, totals, and line items are extracted with
+      provenance back to the source text, not opaque black-box output.</p>
+    </div>
+    <div class="card">
+      <h3>Three ecosystems, one engine</h3>
+      <p>A single Python OCR/extraction engine, wrapped by a native
+      TypeScript/npm client and a Ruby gem, sharing one JSON wire
+      protocol.</p>
+    </div>
+  </div>
+
+  <h2>Installation</h2>
+
+  <h3>Python</h3>
+  <pre><code>pip install receiptlingua</code></pre>
+  <pre><code>from receiptlingua import ReceiptOCR
+
+ocr = ReceiptOCR()
+result = ocr.scan("receipt.jpg")
+print(result.full_text)</code></pre>
+
+  <h3>JavaScript / TypeScript</h3>
+  <pre><code>npm install receiptlingua</code></pre>
+  <pre><code>import { ReceiptOCR } from "receiptlingua";
+
+const ocr = new ReceiptOCR();
+const result = await ocr.scan("receipt.jpg");</code></pre>
+
+  <h3>Ruby</h3>
+  <pre><code>gem install receiptlingua</code></pre>
+  <pre><code>require "receiptlingua"
+
+ocr = ReceiptLingua::ReceiptOCR.new
+result = ocr.scan("receipt.jpg")</code></pre>
+
+  <p class="muted">
+    None of these packages are published yet (pre-0.1, see the status
+    banner above) — this is the API surface as implemented in the
+    repository today.
+  </p>
+
+  <h2>Learn more</h2>
+  <ul>
+    <li><a href="languages.html">Language support matrix</a></li>
+    <li><a href="benchmarks.html">Benchmark results</a></li>
+    <li><a href="docs.html">Docs, roadmap, security, contributing</a></li>
+    <li><a href="support.html">Support &amp; acknowledgements</a></li>
+  </ul>
+</main>
+<footer>
+  <p>
+    ReceiptLingua is open source (Apache-2.0).
+    <a href="https://github.com/iamzayn19/receiptlingua">Source on GitHub</a>.
+    No analytics or trackers on this site.
+  </p>
+</footer>
+</body>
+</html>
