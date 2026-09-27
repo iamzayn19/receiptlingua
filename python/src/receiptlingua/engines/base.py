@@ -59,3 +59,11 @@ class OCREngine(ABC):
         hallucinate text for illegible/blank regions -- return an empty
         or low-confidence/``illegible``-status line instead of guessing.
         """
+
+    def close(self) -> None:  # noqa: B027 -- deliberate no-op default, not all engines need it
+        """Release any resources held across calls (e.g. a sidecar process).
+
+        Default no-op -- most engines (e.g. Tesseract) hold nothing
+        persistent between calls. Engines that do (e.g. PaddleOCR's
+        sidecar daemon) override this.
+        """
