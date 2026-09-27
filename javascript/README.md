@@ -39,15 +39,21 @@ This client does **not** implement its own OCR. It spawns the Python
 the Python package to be installed and importable (`pip install
 receiptlingua`, or point `cliCommand` at a specific interpreter/venv).
 
-This is a deliberate stopgap, not the final architecture: `protocol/README.md`
-already flags the real sidecar transport (a persistent process communicating
-over stdio or a local socket, with its own message framing) as an open ADR
-item that has not been decided or built yet. Until that lands, **every
-`scan()` call pays the full Python interpreter + model-load startup cost**
-(this can be hundreds of milliseconds to a few seconds depending on backend
-and mode) because nothing is kept warm between calls. If you need to scan
-many images, prefer the Python API directly, or watch for the sidecar-daemon
-transport in a future milestone.
+This is a deliberate stopgap, not the final architecture. The transport
+question itself is now decided (newline-delimited JSON over stdio -- see
+`docs/adr/0003-sidecar-transport.md`), and the Python side
+(`PaddleOCREngine`) now keeps a persistent PaddleOCR sidecar daemon warm
+across repeated calls *within one Python process*. That does **not**
+help this client yet: each `scan()` call here still spawns a brand-new
+Python CLI subprocess, does exactly one scan, and exits -- so every call
+still pays the full Python interpreter + model-load startup cost (this
+can be hundreds of milliseconds to a few seconds depending on backend and
+mode), because the CLI process (and therefore any daemon it spawned) does
+not survive past that one call. If you need to scan many images fast,
+prefer the Python API directly (construct one `ReceiptOCR` and call
+`.scan()` on it repeatedly, which does reuse a warm PaddleOCR daemon), or
+watch for a future long-lived server/daemon this client can be pointed at
+instead of re-spawning the CLI per call.
 
 If the CLI can't be found or run, `scan()` throws a `ReceiptLinguaError` with
 `code: "CLI_NOT_FOUND"` and an actionable message, rather than a bare Node

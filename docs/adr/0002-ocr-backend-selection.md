@@ -183,12 +183,46 @@ no sidecar set up keeps working exactly as before, on Tesseract.
   primary-backend choice once PaddleOCR is actually runnable.
 - **Resolved**: the sidecar-Python approach described here was carried
   out (Python 3.13 via Homebrew, see "Update" above) and PaddleOCR now
-  runs for real through it. Remaining follow-up: design the real
-  multi-request sidecar protocol/transport (current wiring is a
-  one-process-per-call stopgap) and decide, after a proper
+  runs for real through it. Remaining follow-up: decide, after a proper
   Tesseract-vs-PaddleOCR quality benchmark across more receipt fixtures,
   whether PaddleOCR should become the *default* backend or stay an
   opt-in one behind `RECEIPTLINGUA_PADDLE_PYTHON`.
+- **Resolved (follow-up session): the one-process-per-call sidecar
+  stopgap was replaced with a persistent sidecar daemon.** The transport
+  question referenced above is decided in
+  `docs/adr/0003-sidecar-transport.md` (newline-delimited JSON over
+  stdio). `PaddleOCREngine` now spawns
+  `_paddle_sidecar_daemon.py` lazily on first use and keeps it alive
+  across every subsequent `recognize()` call on the same engine
+  instance, instead of paying full interpreter-startup + model-load cost
+  every single call.
+
+  Real measured numbers on this machine (Apple M5, macOS, the same
+  `receipt_text_eng.png` fixture used above, `PP-OCRv5`/`en`), from
+  `python/tests/test_paddleocr_engine.py::test_warm_calls_are_faster_than_the_cold_first_call`:
+
+  - **Cold call** (fresh daemon, pays model load): **~1.67-1.68s**.
+  - **Warm call** (daemon already loaded, reused): **~0.49-0.52s**
+    average over 5 repeated calls.
+  - That's roughly a **3.3x speedup** on repeated calls, and since the
+    old stopgap paid the ~1.7s cold-call cost on *every* call (a fresh
+    process every time), the effective win for N repeated scans in one
+    process is the old `N * ~1.7s` versus the new `~1.7s + (N-1) *
+    ~0.5s`.
+
+  Scope, honestly stated: the daemon is single-request-at-a-time FIFO (no
+  concurrent/batched request handling in this pass -- see
+  `_paddle_sidecar_daemon.py`'s docstring). If the daemon dies or hangs
+  mid-session, that one `recognize()` call raises a clean
+  `OCRFailedError` (never hangs forever) and the daemon handle is
+  dropped; the *next* `recognize()` call on the same engine transparently
+  spawns a fresh daemon (auto-respawn), so one bad call doesn't
+  permanently wedge the engine, but it does mean that one call pays the
+  model-load cost again. This only helps callers who reuse one
+  `PaddleOCREngine`/`ReceiptOCR` instance across multiple scans -- a
+  single `receiptlingua scan` CLI invocation (one scan per process) does
+  not benefit, since the daemon it spawns is shut down at the end of that
+  same process anyway.
 - **Language data is a setup-time, offline concern, never a runtime
   fetch.** `tam.traineddata`/`ara.traineddata` (and any other language
   beyond `eng`) must be placed either in the system Tesseract's own

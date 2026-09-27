@@ -712,3 +712,69 @@ scoping) that couldn't be caught by local `actionlint` validation alone;
 confirm `pages.yml` deploys the site; (4) proceed to milestone 196-200
 (release hardening: versioning policy, changelog, first tagged
 pre-release across all three ecosystems).
+
+---
+
+## Follow-up fix (2026-09-27, after the above milestones): persistent PaddleOCR sidecar daemon
+
+This is a **follow-up fix**, not a new numbered milestone. It closes a
+limitation documented plainly in milestone 56-80's ADR 0002 update and
+referenced again in milestones 141-155 and 156-170's JS/Ruby client
+notes: the PaddleOCR sidecar was a one-process-per-call stopgap that
+re-paid full Python interpreter startup + model-load cost on *every*
+`recognize()` call, with no model caching across calls.
+
+What changed:
+
+- **`docs/adr/0003-sidecar-transport.md`** (new): resolves the transport
+  question `protocol/README.md` and `ARCHITECTURE.md` had left open --
+  newline-delimited JSON over the sidecar's stdin/stdout, not a Unix
+  domain socket. Both of those files now point at this ADR instead of
+  calling the transport undecided.
+- **`python/src/receiptlingua/engines/_paddle_sidecar_daemon.py`** (new,
+  replaces the deleted `_paddle_sidecar_script.py`): a long-lived process
+  that loads PaddleOCR's model once per language and serves a
+  single-request-at-a-time FIFO loop of newline-delimited JSON requests,
+  never crashing the whole daemon on one bad request.
+- **`python/src/receiptlingua/engines/paddleocr_engine.py`**: rewritten
+  so `PaddleOCREngine` lazily spawns the daemon on first use and reuses
+  it across every subsequent call, with a request timeout, clean
+  `OCRFailedError` on a hung/dead daemon (auto-respawning on the next
+  call), and an explicit `close()`/context-manager for clean shutdown
+  (verified via `ps` in tests -- no lingering process).
+- **`python/src/receiptlingua/api.py`**: `ReceiptOCR` already cached one
+  engine instance in `self._engine` across `scan()` calls, so it already
+  benefited from the daemon once the engine itself became persistent;
+  added `ReceiptOCR.close()`/context-manager support so callers can
+  shut the sidecar down deliberately.
+- **`python/src/receiptlingua/cli.py`**: `receiptlingua scan` now uses
+  `ReceiptOCR` as a context manager so its sidecar (if any) is shut down
+  cleanly at the end of the process -- a single CLI invocation still only
+  does one scan, so it does not benefit from the daemon's repeated-call
+  speedup, but it no longer risks leaking a daemon process either.
+
+**Real measured numbers** (Apple M5, macOS, `receipt_text_eng.png`
+fixture, PP-OCRv5/`en`, from
+`python/tests/test_paddleocr_engine.py::test_warm_calls_are_faster_than_the_cold_first_call`):
+cold call (fresh daemon, pays model load) **~1.67-1.68s**; warm call
+(daemon reused) **~0.49-0.52s** average over 5 calls -- roughly a **3.3x**
+speedup on repeated calls, growing with N since the old stopgap paid the
+full cold-call cost on every single call.
+
+**Who actually benefits**: anything reusing one `ReceiptOCR`/
+`PaddleOCREngine` instance across multiple scans within one Python
+process (a batch script, a future long-lived server). The JavaScript and
+Ruby clients go through the Python CLI as a subprocess per `scan()` call
+(see `javascript/README.md` / `ruby/README.md`, updated to say so
+explicitly), so a single JS/Ruby `scan()` call still pays the full
+cold-start cost -- the daemon it would spawn dies with that same CLI
+process. Their README's now describe this precisely rather than
+gesturing at an "open ADR item," since the transport question is no
+longer open.
+
+**Known limitations, honestly flagged**: the daemon handles one request
+at a time (no concurrent/pipelined request handling); there is no
+multi-client sharing of one daemon (deliberately out of scope, see ADR
+0003); a crashed/hung daemon is torn down and the triggering call fails
+cleanly, with the *next* call transparently starting a fresh one (that
+next call re-pays the model-load cost).
