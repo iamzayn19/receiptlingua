@@ -49,6 +49,22 @@ the language otherwise looks. A `true` here will only ever appear once a
 real benchmark has produced real evidence -- never as a placeholder or
 aspiration.
 
+There is a **third, separate concept** this table does not track:
+whether `python/src/receiptlingua/synth/generator.py` (the synthetic
+receipt generator used to produce training/eval fixtures) can actually
+render a language. That module has its own, narrower gate -- a language
+is added there only once a real font file on the running machine is
+bbox-probed (`PIL.ImageFont.getmask(ch).getbbox()`) to render genuine,
+non-`.notdef` glyphs for that script, *and* the author has vocabulary
+they are confident is real and correctly spelled. As of the language-
+expansion pass in `docs/COMMIT_PLAN.md`, the synth generator supports 25
+languages this way; several more (Telugu, Bengali, Punjabi, Gujarati,
+Kannada, Malayalam, Nepali, Thai) have a verified font on this machine
+but were left out for lack of confident vocabulary -- see that doc for
+the full list. A synth-generator font pass being verified is **not**
+the same as `receipt_verified` above, which requires actual benchmark
+evidence, not just a working font -- do not conflate the two.
+
 ## Coverage summary
 
 """
