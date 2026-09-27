@@ -42,10 +42,17 @@ def _amount_on_line_or_next(lines: list[str], idx: int) -> tuple[float | None, b
     return None, False, idx
 
 
-def _extract_labeled_amount(lines: list[str], keywords: tuple[str, ...]) -> ScalarField:
-    from receiptlingua.extract.keywords import find_keyword_line
-
-    idx = find_keyword_line(lines, keywords)
+def _extract_labeled_amount(
+    lines: list[str], keywords: tuple[str, ...], exclude_keywords: tuple[str, ...] = ()
+) -> ScalarField:
+    idx = None
+    for candidate_idx, text in enumerate(lines):
+        lowered = text.lower()
+        if any(kw.lower() in lowered for kw in exclude_keywords):
+            continue
+        if any(kw.lower() in lowered for kw in keywords):
+            idx = candidate_idx
+            break
     if idx is None:
         return ScalarField.missing()
 
@@ -73,7 +80,9 @@ def extract_discount(lines: list[str]) -> ScalarField:
 
 
 def extract_total(lines: list[str]) -> ScalarField:
-    return _extract_labeled_amount(lines, TOTAL_KEYWORDS)
+    # "total" is a substring of "subtotal"; exclude subtotal/discount lines
+    # so a subtotal row is never mistaken for the grand total.
+    return _extract_labeled_amount(lines, TOTAL_KEYWORDS, exclude_keywords=SUBTOTAL_KEYWORDS)
 
 
 def extract_amount_fields(lines: list[str]) -> dict[str, ScalarField]:
