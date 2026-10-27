@@ -83,3 +83,21 @@ def test_engine_initialization_error_is_recorded(monkeypatch, tmp_path):
     assert record["error"] == "RuntimeError: OCR backend unavailable"
     assert record["total_exact_match"] is False
     assert (tmp_path / "en_clean_1.json").exists()
+
+
+def test_failed_cases_fail_run_after_writing_diagnostics(monkeypatch, tmp_path, fake_case):
+    original = harness.run_case
+
+    def failed_case(**kwargs):
+        return {**original(**kwargs), "error": "RuntimeError: scan failed"}
+
+    monkeypatch.setattr(harness, "run_case", failed_case)
+    monkeypatch.setattr(sys, "argv", [
+        "benchmark", "--languages", "en", "--degradations", "clean",
+        "--samples-per-language", "1", "--output-dir", str(tmp_path),
+    ])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 1
+    assert json.loads((tmp_path / "latest_summary.json").read_text())["overall"]["n_errors"] == 1
+    assert "scan failed" in (tmp_path / "latest_raw.jsonl").read_text()

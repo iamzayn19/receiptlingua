@@ -410,6 +410,8 @@ def main() -> None:
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"\nExecuted {len(records)} real cases in {total_elapsed:.1f}s. Summary written to {summary_path}")
+    if summary["overall"]["n_errors"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
