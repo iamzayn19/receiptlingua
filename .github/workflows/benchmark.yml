@@ -42,11 +42,14 @@ jobs:
         run: python -m pip install --upgrade pip && pip install -e "./python[dev]"
 
       - name: Run benchmark
+        env:
+          BENCHMARK_LANGUAGES: ${{ inputs.languages || 'en,ta,ar,hi,he' }}
+          BENCHMARK_SAMPLES: ${{ inputs.samples_per_language || '5' }}
         run: |
           python benchmarks/run_benchmark.py \
-            --languages "${{ github.event.inputs.languages || 'en,ta,ar,hi,he' }}" \
+            --languages "$BENCHMARK_LANGUAGES" \
             --degradations all \
-            --samples-per-language "${{ github.event.inputs.samples_per_language || '5' }}" \
+            --samples-per-language "$BENCHMARK_SAMPLES" \
             --seed-base 20000
 
       - name: Upload benchmark summary
