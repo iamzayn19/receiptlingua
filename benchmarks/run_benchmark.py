@@ -147,7 +147,9 @@ PADDLE_LANG_MAP: dict[str, str] = {
 def _parse_list_arg(value: str, valid: list[str]) -> list[str]:
     if value == "all":
         return list(valid)
-    chosen = [v.strip() for v in value.split(",") if v.strip()]
+    chosen = list(dict.fromkeys(v.strip() for v in value.split(",") if v.strip()))
+    if not chosen:
+        raise SystemExit("choose at least one value")
     unknown = [v for v in chosen if v not in valid]
     if unknown:
         raise SystemExit(f"unknown value(s) {unknown}; valid options: {valid}")
@@ -329,6 +331,10 @@ def main() -> None:
     )
     parser.add_argument("--output-dir", default=str(RESULTS_DIR))
     args = parser.parse_args()
+    if args.samples_per_language < 1:
+        parser.error("--samples-per-language must be positive")
+    if args.max_cases is not None and args.max_cases < 1:
+        parser.error("--max-cases must be positive")
 
     languages = _parse_list_arg(args.languages, list(SUPPORTED_LANGUAGES))
     degradations = _parse_list_arg(args.degradations, list(DEGRADATIONS.keys()))
