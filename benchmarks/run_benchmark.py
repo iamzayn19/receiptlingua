@@ -40,7 +40,6 @@ import statistics
 import sys
 import time
 from collections import defaultdict
-from dataclasses import asdict
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -51,8 +50,12 @@ from receiptlingua.synth.degrade import DEGRADATIONS  # noqa: E402
 from receiptlingua.synth.generator import SUPPORTED_LANGUAGES, generate_receipt  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from metrics import fuzzy_match  # noqa: E402
-from metrics import character_error_rate, normalized_edit_distance, word_error_rate
+from metrics import (  # noqa: E402
+    character_error_rate,
+    fuzzy_match,
+    normalized_edit_distance,
+    word_error_rate,
+)
 
 RESULTS_DIR = REPO_ROOT / "benchmarks" / "results"
 SUMMARY_PATH = REPO_ROOT / "benchmarks" / "latest_summary.json"
@@ -157,7 +160,7 @@ def _parse_list_arg(value: str, valid: list[str]) -> list[str]:
 
 
 def case_seed(language: str, sample_idx: int, seed_base: int) -> int:
-    digest = hashlib.sha256(f"{language}:{sample_idx}".encode("utf-8")).digest()
+    digest = hashlib.sha256(f"{language}:{sample_idx}".encode()).digest()
     return seed_base + int.from_bytes(digest[:8], "big") % 1_000_000
 
 
@@ -284,9 +287,7 @@ def aggregate(records: list[dict]) -> dict:
                 "mean_normalized_edit_distance": round(
                     statistics.mean(r["normalized_edit_distance"] for r in rows), 4
                 ),
-                "merchant_match_rate": round(
-                    sum(1 for r in rows if r["merchant_match"]) / n, 4
-                ),
+                "merchant_match_rate": round(sum(1 for r in rows if r["merchant_match"]) / n, 4),
                 "date_exact_match_rate": round(
                     sum(1 for r in rows if r["date_exact_match"]) / n, 4
                 ),
@@ -312,22 +313,30 @@ def aggregate(records: list[dict]) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--languages", default="en,ta,ar", help="comma list or 'all' (default: en,ta,ar)")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--languages", default="en,ta,ar", help="comma list or 'all' (default: en,ta,ar)"
+    )
     parser.add_argument("--degradations", default="all", help="comma list or 'all'")
     parser.add_argument(
         "--samples-per-language",
         type=int,
         default=5,
-        help="base receipts per language; total cases = languages * samples * degradations (default: 5)",
+        help="base receipts per language (default: 5); cases = languages * samples * degradations",
     )
-    parser.add_argument("--seed-base", type=int, default=10_000, help="base seed offset (default: 10000)")
-    parser.add_argument("--backend", default=None, help="OCR backend name (default: engine registry default)")
+    parser.add_argument(
+        "--seed-base", type=int, default=10_000, help="base seed offset (default: 10000)"
+    )
+    parser.add_argument(
+        "--backend", default=None, help="OCR backend name (default: engine registry default)"
+    )
     parser.add_argument(
         "--max-cases",
         type=int,
         default=None,
-        help="hard safety cap on total cases actually run, regardless of the languages/samples/degradations product",
+        help="hard cap on executed cases, regardless of languages * samples * degradations",
     )
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--summary-path", default=None)
@@ -345,51 +354,60 @@ def main() -> None:
 
     output_dir = Path(args.output_dir) if args.output_dir else RESULTS_DIR
     summary_path = (
-        Path(args.summary_path) if args.summary_path
-        else output_dir / "latest_summary.json" if args.output_dir else SUMMARY_PATH
+        Path(args.summary_path)
+        if args.summary_path
+        else output_dir / "latest_summary.json"
+        if args.output_dir
+        else SUMMARY_PATH
     )
     raw_dir = output_dir / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
 
     print(
         f"Planned cases: {planned_cases} "
-        f"({len(languages)} languages x {args.samples_per_language} samples x {len(degradations)} degradations)"
+        f"({len(languages)} languages x {args.samples_per_language} samples "
+        f"x {len(degradations)} degradations)"
     )
     if args.max_cases is not None and cases_to_run < planned_cases:
-        print(f"--max-cases caps this run at {cases_to_run} cases (fewer than the planned {planned_cases}).")
+        print(
+            f"--max-cases caps this run at {cases_to_run} cases "
+            f"(fewer than the planned {planned_cases})."
+        )
 
     records: list[dict] = []
     run_count = 0
     ocr_cache: dict[str, ReceiptOCR] = {}
     start_all = time.perf_counter()
-    for language in languages:
-        for sample_idx in range(args.samples_per_language):
-            for degradation in degradations:
+    try:
+        for language in languages:
+            for sample_idx in range(args.samples_per_language):
+                for degradation in degradations:
+                    if run_count >= cases_to_run:
+                        break
+                    seed = case_seed(language, sample_idx, args.seed_base)
+                    record = run_case(
+                        language=language,
+                        degradation=degradation,
+                        seed=seed,
+                        backend=args.backend,
+                        raw_dir=raw_dir,
+                        ocr_cache=ocr_cache,
+                    )
+                    records.append(record)
+                    run_count += 1
+                    print(
+                        f"[{run_count}/{cases_to_run}] {language}/{degradation} "
+                        f"seed={seed} cer={record['cer']:.3f} elapsed={record['elapsed_ms']:.0f}ms "
+                        f"{'ERROR: ' + record['error'] if record['error'] else ''}"
+                    )
                 if run_count >= cases_to_run:
                     break
-                seed = case_seed(language, sample_idx, args.seed_base)
-                record = run_case(
-                    language=language,
-                    degradation=degradation,
-                    seed=seed,
-                    backend=args.backend,
-                    raw_dir=raw_dir,
-                    ocr_cache=ocr_cache,
-                )
-                records.append(record)
-                run_count += 1
-                print(
-                    f"[{run_count}/{cases_to_run}] {language}/{degradation} "
-                    f"seed={seed} cer={record['cer']:.3f} elapsed={record['elapsed_ms']:.0f}ms "
-                    f"{'ERROR: ' + record['error'] if record['error'] else ''}"
-                )
             if run_count >= cases_to_run:
                 break
-        if run_count >= cases_to_run:
-            break
+    finally:
+        for ocr in ocr_cache.values():
+            ocr.close()
     total_elapsed = time.perf_counter() - start_all
-    for ocr in ocr_cache.values():
-        ocr.close()
 
     raw_jsonl = output_dir / "latest_raw.jsonl"
     with raw_jsonl.open("w", encoding="utf-8") as f:
@@ -408,8 +426,13 @@ def main() -> None:
         "mean_case_time_s": round(total_elapsed / len(records), 3) if records else None,
     }
     summary_path.parent.mkdir(parents=True, exist_ok=True)
-    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"\nExecuted {len(records)} real cases in {total_elapsed:.1f}s. Summary written to {summary_path}")
+    summary_path.write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    print(
+        f"\nExecuted {len(records)} real cases in {total_elapsed:.1f}s. "
+        f"Summary written to {summary_path}"
+    )
     if summary["overall"]["n_errors"]:
         raise SystemExit(1)
 

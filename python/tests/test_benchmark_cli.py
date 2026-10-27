@@ -11,8 +11,8 @@ import pytest
 BENCHMARKS = Path(__file__).resolve().parents[2] / "benchmarks"
 sys.path.insert(0, str(BENCHMARKS))
 
-from run_benchmark import _parse_list_arg, case_seed, main  # noqa: E402
 import run_benchmark as harness  # noqa: E402
+from run_benchmark import _parse_list_arg, case_seed, main  # noqa: E402
 
 
 def test_case_seed_is_stable_across_python_processes():
@@ -52,19 +52,38 @@ def test_nonpositive_counts_fail_before_ocr(monkeypatch, capsys, option, count):
 def fake_case(monkeypatch):
     def run(**kwargs):
         return {
-            "language": kwargs["language"], "degradation": kwargs["degradation"],
-            "backend": "default", "error": None, "cer": 0.0, "wer": 0.0,
-            "normalized_edit_distance": 0.0, "merchant_match": True,
-            "date_exact_match": True, "total_exact_match": True, "elapsed_ms": 1.0,
+            "language": kwargs["language"],
+            "degradation": kwargs["degradation"],
+            "backend": "default",
+            "error": None,
+            "cer": 0.0,
+            "wer": 0.0,
+            "normalized_edit_distance": 0.0,
+            "merchant_match": True,
+            "date_exact_match": True,
+            "total_exact_match": True,
+            "elapsed_ms": 1.0,
         }
+
     monkeypatch.setattr(harness, "run_case", run)
 
 
 def test_custom_output_keeps_summary_outside_checkout(monkeypatch, tmp_path, fake_case):
-    monkeypatch.setattr(sys, "argv", [
-        "benchmark", "--languages", "en", "--degradations", "clean",
-        "--samples-per-language", "1", "--output-dir", str(tmp_path),
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark",
+            "--languages",
+            "en",
+            "--degradations",
+            "clean",
+            "--samples-per-language",
+            "1",
+            "--output-dir",
+            str(tmp_path),
+        ],
+    )
     main()
     summary = json.loads((tmp_path / "latest_summary.json").read_text())
     assert summary["overall"]["n_cases"] == 1
@@ -77,8 +96,12 @@ def test_engine_initialization_error_is_recorded(monkeypatch, tmp_path):
 
     monkeypatch.setattr(harness, "ReceiptOCR", unavailable)
     record = harness.run_case(
-        language="en", degradation="clean", seed=1, backend=None,
-        raw_dir=tmp_path, ocr_cache={},
+        language="en",
+        degradation="clean",
+        seed=1,
+        backend=None,
+        raw_dir=tmp_path,
+        ocr_cache={},
     )
     assert record["error"] == "RuntimeError: OCR backend unavailable"
     assert record["total_exact_match"] is False
@@ -92,12 +115,55 @@ def test_failed_cases_fail_run_after_writing_diagnostics(monkeypatch, tmp_path, 
         return {**original(**kwargs), "error": "RuntimeError: scan failed"}
 
     monkeypatch.setattr(harness, "run_case", failed_case)
-    monkeypatch.setattr(sys, "argv", [
-        "benchmark", "--languages", "en", "--degradations", "clean",
-        "--samples-per-language", "1", "--output-dir", str(tmp_path),
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark",
+            "--languages",
+            "en",
+            "--degradations",
+            "clean",
+            "--samples-per-language",
+            "1",
+            "--output-dir",
+            str(tmp_path),
+        ],
+    )
     with pytest.raises(SystemExit) as exc:
         main()
     assert exc.value.code == 1
     assert json.loads((tmp_path / "latest_summary.json").read_text())["overall"]["n_errors"] == 1
     assert "scan failed" in (tmp_path / "latest_raw.jsonl").read_text()
+
+
+def test_cached_engine_is_closed_on_interrupt(monkeypatch, tmp_path):
+    closed = []
+
+    class Engine:
+        def close(self):
+            closed.append(True)
+
+    def interrupted(**kwargs):
+        kwargs["ocr_cache"]["en"] = Engine()
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(harness, "run_case", interrupted)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark",
+            "--languages",
+            "en",
+            "--degradations",
+            "clean",
+            "--samples-per-language",
+            "1",
+            "--output-dir",
+            str(tmp_path),
+        ],
+    )
+    with pytest.raises(KeyboardInterrupt):
+        main()
+    assert closed == [True]
