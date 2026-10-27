@@ -203,13 +203,13 @@ def run_case(
     # ~1.7s model-load cost only ONCE per language and serve every
     # subsequent case for that language warm (~0.5s) -- a fresh instance
     # per case would defeat the whole point of the daemon.
-    if language not in ocr_cache:
-        ocr_cache[language] = ReceiptOCR(backend=backend, languages=engine_languages)
-    ocr = ocr_cache[language]
     start = time.perf_counter()
     error = None
     result = None
     try:
+        if language not in ocr_cache:
+            ocr_cache[language] = ReceiptOCR(backend=backend, languages=engine_languages)
+        ocr = ocr_cache[language]
         result = ocr.scan(str(img_path))
     except Exception as exc:  # noqa: BLE001 - a benchmark case failing must not crash the run
         error = f"{type(exc).__name__}: {exc}"

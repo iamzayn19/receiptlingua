@@ -69,3 +69,17 @@ def test_custom_output_keeps_summary_outside_checkout(monkeypatch, tmp_path, fak
     summary = json.loads((tmp_path / "latest_summary.json").read_text())
     assert summary["overall"]["n_cases"] == 1
     assert (tmp_path / "latest_raw.jsonl").exists()
+
+
+def test_engine_initialization_error_is_recorded(monkeypatch, tmp_path):
+    def unavailable(**kwargs):
+        raise RuntimeError("OCR backend unavailable")
+
+    monkeypatch.setattr(harness, "ReceiptOCR", unavailable)
+    record = harness.run_case(
+        language="en", degradation="clean", seed=1, backend=None,
+        raw_dir=tmp_path, ocr_cache={},
+    )
+    assert record["error"] == "RuntimeError: OCR backend unavailable"
+    assert record["total_exact_match"] is False
+    assert (tmp_path / "en_clean_1.json").exists()
