@@ -5,10 +5,14 @@ on:
     branches: [main]
     paths:
       - "python/**"
+      - "benchmarks/**"
+      - ".github/workflows/benchmark.yml"
       - ".github/workflows/python-tests.yml"
   pull_request:
     paths:
       - "python/**"
+      - "benchmarks/**"
+      - ".github/workflows/benchmark.yml"
       - ".github/workflows/python-tests.yml"
 
 # Fast CI only. This workflow deliberately installs the lightweight,
@@ -64,3 +68,9 @@ jobs:
 
       - name: pytest
         run: pytest -q
+
+      - name: Benchmark CLI smoke test
+        run: |
+          python ../benchmarks/run_benchmark.py \
+            --languages en --degradations clean --samples-per-language 1 \
+            --output-dir "${{ runner.temp }}/receiptlingua-benchmark-smoke"
