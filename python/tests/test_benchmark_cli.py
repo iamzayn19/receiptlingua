@@ -1,5 +1,6 @@
 """Regression tests for benchmark orchestration without running OCR."""
 
+import json
 import os
 import subprocess
 import sys
@@ -11,6 +12,7 @@ BENCHMARKS = Path(__file__).resolve().parents[2] / "benchmarks"
 sys.path.insert(0, str(BENCHMARKS))
 
 from run_benchmark import _parse_list_arg, case_seed, main  # noqa: E402
+import run_benchmark as harness  # noqa: E402
 
 
 def test_case_seed_is_stable_across_python_processes():
@@ -44,3 +46,26 @@ def test_nonpositive_counts_fail_before_ocr(monkeypatch, capsys, option, count):
         main()
     assert exc.value.code == 2
     assert f"{option} must be positive" in capsys.readouterr().err
+
+
+@pytest.fixture
+def fake_case(monkeypatch):
+    def run(**kwargs):
+        return {
+            "language": kwargs["language"], "degradation": kwargs["degradation"],
+            "backend": "default", "error": None, "cer": 0.0, "wer": 0.0,
+            "normalized_edit_distance": 0.0, "merchant_match": True,
+            "date_exact_match": True, "total_exact_match": True, "elapsed_ms": 1.0,
+        }
+    monkeypatch.setattr(harness, "run_case", run)
+
+
+def test_custom_output_keeps_summary_outside_checkout(monkeypatch, tmp_path, fake_case):
+    monkeypatch.setattr(sys, "argv", [
+        "benchmark", "--languages", "en", "--degradations", "clean",
+        "--samples-per-language", "1", "--output-dir", str(tmp_path),
+    ])
+    main()
+    summary = json.loads((tmp_path / "latest_summary.json").read_text())
+    assert summary["overall"]["n_cases"] == 1
+    assert (tmp_path / "latest_raw.jsonl").exists()

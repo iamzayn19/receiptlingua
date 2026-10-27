@@ -329,7 +329,8 @@ def main() -> None:
         default=None,
         help="hard safety cap on total cases actually run, regardless of the languages/samples/degradations product",
     )
-    parser.add_argument("--output-dir", default=str(RESULTS_DIR))
+    parser.add_argument("--output-dir", default=None)
+    parser.add_argument("--summary-path", default=None)
     args = parser.parse_args()
     if args.samples_per_language < 1:
         parser.error("--samples-per-language must be positive")
@@ -342,7 +343,12 @@ def main() -> None:
     planned_cases = len(languages) * args.samples_per_language * len(degradations)
     cases_to_run = planned_cases if args.max_cases is None else min(planned_cases, args.max_cases)
 
-    raw_dir = Path(args.output_dir) / "raw"
+    output_dir = Path(args.output_dir) if args.output_dir else RESULTS_DIR
+    summary_path = (
+        Path(args.summary_path) if args.summary_path
+        else output_dir / "latest_summary.json" if args.output_dir else SUMMARY_PATH
+    )
+    raw_dir = output_dir / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
 
     print(
@@ -385,8 +391,8 @@ def main() -> None:
     for ocr in ocr_cache.values():
         ocr.close()
 
-    raw_jsonl = Path(args.output_dir) / "latest_raw.jsonl"
-    with raw_jsonl.open("w") as f:
+    raw_jsonl = output_dir / "latest_raw.jsonl"
+    with raw_jsonl.open("w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r) + "\n")
 
@@ -401,8 +407,9 @@ def main() -> None:
         "total_wall_time_s": round(total_elapsed, 1),
         "mean_case_time_s": round(total_elapsed / len(records), 3) if records else None,
     }
-    SUMMARY_PATH.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n")
-    print(f"\nExecuted {len(records)} real cases in {total_elapsed:.1f}s. Summary written to {SUMMARY_PATH}")
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"\nExecuted {len(records)} real cases in {total_elapsed:.1f}s. Summary written to {summary_path}")
 
 
 if __name__ == "__main__":
