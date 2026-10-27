@@ -34,6 +34,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import statistics
 import sys
@@ -151,6 +152,11 @@ def _parse_list_arg(value: str, valid: list[str]) -> list[str]:
     if unknown:
         raise SystemExit(f"unknown value(s) {unknown}; valid options: {valid}")
     return chosen
+
+
+def case_seed(language: str, sample_idx: int, seed_base: int) -> int:
+    digest = hashlib.sha256(f"{language}:{sample_idx}".encode("utf-8")).digest()
+    return seed_base + int.from_bytes(digest[:8], "big") % 1_000_000
 
 
 def run_case(
@@ -349,7 +355,7 @@ def main() -> None:
             for degradation in degradations:
                 if run_count >= cases_to_run:
                     break
-                seed = args.seed_base + hash((language, sample_idx)) % 1_000_000
+                seed = case_seed(language, sample_idx, args.seed_base)
                 record = run_case(
                     language=language,
                     degradation=degradation,
